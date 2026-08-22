@@ -40,53 +40,51 @@ jobs:
           #   share/sdcc/
           #     include/     -> header files
           #     lib/small/   -> small model libraries
-          mkdir -p repackaged/bin
-          mkdir -p repackaged/share/sdcc
+          mkdir -p sdcc/bin
+          mkdir -p sdcc/share/sdcc
 
           # Copy binaries from system install
           for bin in sdcc sdar sdas8051 sdld packihx sdnm sdobjcopy; do
             SRC=$(which $bin 2>/dev/null || true)
             if [ -n "$SRC" ]; then
-              cp "$SRC" repackaged/bin/
-              echo "Copied: $bin -> repackaged/bin/"
+              cp "$SRC" sdcc/bin/
+              echo "Copied: $bin -> sdcc/bin/"
             else
               echo "Not found: $bin (skipping)"
             fi
           done
-          chmod +x repackaged/bin/*
+          chmod +x sdcc/bin/*
 
           # Copy includes and libraries from system paths
           SDCC_SHARE=$(sdcc --print-search-dirs 2>/dev/null | grep datadir | awk '{print $2}' || echo "/usr/share/sdcc")
           echo "SDCC share dir: $SDCC_SHARE"
 
           if [ -d "$SDCC_SHARE/include" ]; then
-            cp -r "$SDCC_SHARE/include" repackaged/share/sdcc/
+            cp -r "$SDCC_SHARE/include" sdcc/share/sdcc/
           elif [ -d "/usr/share/sdcc/include" ]; then
-            cp -r /usr/share/sdcc/include repackaged/share/sdcc/
+            cp -r /usr/share/sdcc/include sdcc/share/sdcc/
           fi
 
           if [ -d "$SDCC_SHARE/lib" ]; then
-            cp -r "$SDCC_SHARE/lib" repackaged/share/sdcc/
+            cp -r "$SDCC_SHARE/lib" sdcc/share/sdcc/
           elif [ -d "/usr/share/sdcc/lib" ]; then
-            cp -r /usr/share/sdcc/lib repackaged/share/sdcc/
+            cp -r /usr/share/sdcc/lib sdcc/share/sdcc/
           fi
 
           if [ -d "$SDCC_SHARE/non-free" ]; then
-            cp -r "$SDCC_SHARE/non-free" repackaged/share/sdcc/
+            cp -r "$SDCC_SHARE/non-free" sdcc/share/sdcc/
           elif [ -d "/usr/share/sdcc/non-free" ]; then
-            cp -r /usr/share/sdcc/non-free repackaged/share/sdcc/
+            cp -r /usr/share/sdcc/non-free sdcc/share/sdcc/
           fi
 
           # Show what we packaged
           echo "=== Package contents ==="
-          find repackaged -type f | head -30
+          find sdcc -type f | head -30
           echo "..."
 
-          # Create the final archive
+          # Create the final archive containing top-level root folder
           ARCHIVE="sdcc-${LABEL_VER}-linux-x86_64.tar.gz"
-          cd repackaged
-          tar -czf "../${ARCHIVE}" .
-          cd ..
+          tar -czf "${ARCHIVE}" sdcc
 
           echo "Created: ${ARCHIVE}"
           ls -la "${ARCHIVE}"
@@ -170,10 +168,11 @@ jobs:
           Get-ChildItem $sdccDir
 
           # Create repackaged directory structure expected by platform.txt (Windows):
-          #   bin/         -> sdcc.exe, sdar.exe, packihx.exe, etc.
-          #   include/     -> header files (NO share/sdcc/ prefix)
-          #   lib/         -> libraries (NO share/sdcc/ prefix)
-          $repackDir = "repackaged"
+          #   sdcc/
+          #     bin/         -> sdcc.exe, sdar.exe, packihx.exe, etc.
+          #     include/     -> header files (NO share/sdcc/ prefix)
+          #     lib/         -> libraries (NO share/sdcc/ prefix)
+          $repackDir = "sdcc"
           New-Item -ItemType Directory -Path "$repackDir\bin" -Force
           New-Item -ItemType Directory -Path "$repackDir\include" -Force
           New-Item -ItemType Directory -Path "$repackDir\lib" -Force
@@ -209,9 +208,9 @@ jobs:
           Write-Host "=== Package contents ==="
           Get-ChildItem -Recurse $repackDir | Select-Object -First 30
 
-          # Create the zip archive
+          # Create the zip archive with top-level root directory
           $archive = "sdcc-${labelVer}-windows-x86_64.zip"
-          Compress-Archive -Path "$repackDir\*" -DestinationPath $archive
+          Compress-Archive -Path $repackDir -DestinationPath $archive
           Write-Host "Created: $archive"
           Get-Item $archive
 
@@ -272,25 +271,23 @@ jobs:
       - name: Create wrapper script and package
         run: |
           LABEL_VER="${{ inputs.stcgal_version }}"
-          mkdir -p package
+          mkdir -p stcgal
 
           # Copy the standalone binary
-          cp dist/stcgal package/
-          chmod +x package/stcgal
+          cp dist/stcgal stcgal/
+          chmod +x stcgal/stcgal
 
           # Create the wrapper shell script
-          echo '#!/bin/bash' > package/stcgal.sh
-          echo '# stcgal wrapper for Arduino IDE' >> package/stcgal.sh
-          echo '# Passes all arguments to the stcgal binary' >> package/stcgal.sh
-          echo 'SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"' >> package/stcgal.sh
-          echo '"${SCRIPT_DIR}/stcgal" "$@"' >> package/stcgal.sh
-          chmod +x package/stcgal.sh
+          echo '#!/bin/bash' > stcgal/stcgal.sh
+          echo '# stcgal wrapper for Arduino IDE' >> stcgal/stcgal.sh
+          echo '# Passes all arguments to the stcgal binary' >> stcgal/stcgal.sh
+          echo 'SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"' >> stcgal/stcgal.sh
+          echo '"${SCRIPT_DIR}/stcgal" "$@"' >> stcgal/stcgal.sh
+          chmod +x stcgal/stcgal.sh
 
-          # Create the archive
+          # Create the archive with top-level root folder
           ARCHIVE="stcgal-${LABEL_VER}-linux-x86_64.tar.gz"
-          cd package
-          tar -czf "../${ARCHIVE}" .
-          cd ..
+          tar -czf "${ARCHIVE}" stcgal
 
           echo "Created: ${ARCHIVE}"
           ls -la "${ARCHIVE}"
@@ -346,18 +343,18 @@ jobs:
         shell: pwsh
         run: |
           $labelVer = "${{ inputs.stcgal_version }}"
-          New-Item -ItemType Directory -Path "package" -Force
+          New-Item -ItemType Directory -Path "stcgal" -Force
 
           # Copy the standalone exe
-          Copy-Item "dist\stcgal.exe" "package\"
+          Copy-Item "dist\stcgal.exe" "stcgal\"
 
           # Create the wrapper batch script
           $lines = @("@echo off", "REM stcgal wrapper for Arduino IDE", "REM Passes all arguments to the stcgal binary", """%~dp0stcgal.exe"" %*")
-          $lines -join "`r`n" | Set-Content -Path "package\stcgal.bat" -NoNewline -Encoding ASCII
+          $lines -join "`r`n" | Set-Content -Path "stcgal\stcgal.bat" -NoNewline -Encoding ASCII
 
-          # Create the zip archive
+          # Create the zip archive with top-level root directory
           $archive = "stcgal-${labelVer}-windows-x86_64.zip"
-          Compress-Archive -Path "package\*" -DestinationPath $archive
+          Compress-Archive -Path "stcgal" -DestinationPath $archive
           Write-Host "Created: $archive"
           Get-Item $archive
 
