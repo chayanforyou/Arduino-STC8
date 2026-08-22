@@ -243,13 +243,11 @@ jobs:
 
           # Create the wrapper shell script
           # This is what platform.txt calls: "{path}/{cmd}" -p {serial.port} ...
-          cat > package/stcgal.sh << 'WRAPPER_EOF'
-#!/bin/bash
-# stcgal wrapper for Arduino IDE
-# Passes all arguments to the stcgal binary
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-"${SCRIPT_DIR}/stcgal" "$@"
-WRAPPER_EOF
+          echo '#!/bin/bash' > package/stcgal.sh
+          echo '# stcgal wrapper for Arduino IDE' >> package/stcgal.sh
+          echo '# Passes all arguments to the stcgal binary' >> package/stcgal.sh
+          echo 'SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"' >> package/stcgal.sh
+          echo '"${SCRIPT_DIR}/stcgal" "$@"' >> package/stcgal.sh
           chmod +x package/stcgal.sh
 
           # Create the archive
@@ -327,12 +325,8 @@ WRAPPER_EOF
 
           # Create the wrapper batch script
           # This is what platform.txt calls: "{path}/{cmd}" -p {serial.port} ...
-          @"
-@echo off
-REM stcgal wrapper for Arduino IDE
-REM Passes all arguments to the stcgal binary
-"%~dp0stcgal.exe" %*
-"@ | Set-Content -Path "package\stcgal.bat" -Encoding ASCII
+          $batContent = "@echo off`r`nREM stcgal wrapper for Arduino IDE`r`nREM Passes all arguments to the stcgal binary`r`n`"%~dp0stcgal.exe`" %*"
+          [System.IO.File]::WriteAllText("package\stcgal.bat", $batContent)
 
           # Create the zip archive
           $archive = "stcgal-${labelVer}-windows-x86_64.zip"
