@@ -42,14 +42,14 @@
               "host": "x86_64-pc-linux-gnu",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.0/sdcc-4.5.0-linux-x86_64.tar.gz",
               "archiveFileName": "sdcc-4.5.0-linux-x86_64.tar.gz",
-              "checksum": "SHA-256:04c5ce96dacabb0319a84b4f11dfe9b058a1ba2bc94f19c5fad3a3200116380a",
-              "size": "2871226"
+              "checksum": "SHA-256:ad63970daef579f0c4184ac17afdfaab78148e16d3000f0c8846bb68b65c5934",
+              "size": "2871214"
             },
             {
               "host": "x86_64-mingw32",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.0/sdcc-4.5.0-windows-x86_64.zip",
               "archiveFileName": "sdcc-4.5.0-windows-x86_64.zip",
-              "checksum": "SHA-256:4bae979f129d1d427fae04a73f6683a999e25b4d5f4174a5359d01c87bd53807",
+              "checksum": "SHA-256:6bffdecb4231f524fb03380b57c0d83acf2f21897d7d7ab1d2b2c939199c34b8",
               "size": "31630359"
             }
           ]
@@ -62,15 +62,15 @@
               "host": "x86_64-pc-linux-gnu",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.0/stcgal-1.0.0-linux-x86_64.tar.gz",
               "archiveFileName": "stcgal-1.0.0-linux-x86_64.tar.gz",
-              "checksum": "SHA-256:89e2599c929e8bd8da9930c9744fc7abcf9dbf0f817ddfb051cf195f9174afd0",
-              "size": "18466852"
+              "checksum": "SHA-256:d248c9734f00a77fb4b9dca2b53d3a8f64a033bb423a3138510c85f1a4066502",
+              "size": "18464180"
             },
             {
               "host": "x86_64-mingw32",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.0/stcgal-1.0.0-windows-x86_64.zip",
               "archiveFileName": "stcgal-1.0.0-windows-x86_64.zip",
-              "checksum": "SHA-256:1f1d4b05e141d2cbca9e6e56700b8282b29884ce13ce3560d0e1ddfd7c322e4c",
-              "size": "9294561"
+              "checksum": "SHA-256:925eadd381bc637534b425abbdf3a5f17b056399b0d34a8a945ce85ba9edc5ad",
+              "size": "9295832"
             }
           ]
         }
