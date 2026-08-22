@@ -109,10 +109,29 @@ jobs:
   build-sdcc-windows:
     runs-on: windows-latest
     steps:
-      - name: Install SDCC via Chocolatey
+      - name: Install SDCC on Windows
         shell: pwsh
         run: |
-          choco install sdcc -y --no-progress
+          try {
+            Write-Host "Attempting SDCC installation via Winget..."
+            winget install SDCC.SDCC --accept-source-agreements --accept-package-agreements -e --silent
+          } catch {
+            Write-Host "Winget failed or not available, falling back to direct setup download..."
+          }
+
+          # Check if SDCC installed
+          $sdccExe = Get-Command sdcc.exe -ErrorAction SilentlyContinue
+          if (-not $sdccExe -and -not (Test-Path "C:\Program Files\SDCC\bin\sdcc.exe")) {
+            Write-Host "Downloading SDCC 4.5.0 installer..."
+            $url = "https://sourceforge.net/projects/sdcc/files/sdcc-win64/4.5.0/sdcc-4.5.0-x64-setup.exe/download"
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            $webClient = New-Object System.Net.WebClient
+            $webClient.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+            $webClient.DownloadFile($url, "sdcc-setup.exe")
+            
+            Write-Host "Installing SDCC silently to C:\SDCC..."
+            Start-Process -FilePath ".\sdcc-setup.exe" -ArgumentList "/S", "/D=C:\SDCC" -Wait
+          }
 
       - name: Repackage SDCC
         shell: pwsh
@@ -125,6 +144,7 @@ jobs:
           if (-not $sdccExe) {
             # Search common locations
             $searchPaths = @(
+              "C:\SDCC",
               "C:\Program Files\SDCC",
               "C:\Program Files (x86)\SDCC",
               "C:\tools\sdcc",
