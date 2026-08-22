@@ -113,32 +113,40 @@ jobs:
         shell: pwsh
         run: |
           choco install sdcc -y --no-progress
-          refreshenv
-          # Add SDCC to PATH for subsequent steps
-          $sdccPath = (Get-ChildItem -Path "C:\Program Files\SDCC" -ErrorAction SilentlyContinue |
-                       Select-Object -First 1).FullName
-          if (-not $sdccPath) {
-            $sdccPath = "C:\Program Files\SDCC"
-          }
-          Write-Host "SDCC installed at: $sdccPath"
-          Get-ChildItem $sdccPath -ErrorAction SilentlyContinue
-          echo "$sdccPath\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Repackage SDCC
         shell: pwsh
         run: |
           $labelVer = "${{ inputs.sdcc_label_version }}"
 
-          # Find the SDCC installation directory
-          $sdccDir = "C:\Program Files\SDCC"
-          if (-not (Test-Path $sdccDir)) {
-            # Try finding it
-            $sdccExe = Get-Command sdcc -ErrorAction SilentlyContinue
-            if ($sdccExe) {
-              $sdccDir = Split-Path (Split-Path $sdccExe.Source)
+          # Find the actual SDCC install directory dynamically
+          # Choco may install to various locations, so find sdcc.exe first
+          $sdccExe = Get-Command sdcc.exe -ErrorAction SilentlyContinue
+          if (-not $sdccExe) {
+            # Search common locations
+            $searchPaths = @(
+              "C:\Program Files\SDCC",
+              "C:\Program Files (x86)\SDCC",
+              "C:\tools\sdcc",
+              "C:\ProgramData\chocolatey\lib\sdcc\tools"
+            )
+            foreach ($p in $searchPaths) {
+              $candidate = Join-Path $p "bin\sdcc.exe"
+              if (Test-Path $candidate) {
+                $sdccExe = Get-Item $candidate
+                break
+              }
             }
           }
-          Write-Host "SDCC directory: $sdccDir"
+          if (-not $sdccExe) {
+            Write-Error "Could not find sdcc.exe!"
+            exit 1
+          }
+
+          # Derive the install directory (go up from bin/sdcc.exe)
+          $sdccBinDir = if ($sdccExe.Source) { Split-Path $sdccExe.Source } else { Split-Path $sdccExe.FullName }
+          $sdccDir = Split-Path $sdccBinDir
+          Write-Host "SDCC found at: $sdccDir"
           Get-ChildItem $sdccDir
 
           # Create repackaged directory structure expected by platform.txt (Windows):
@@ -300,12 +308,15 @@ jobs:
       - name: Build standalone binary
         shell: pwsh
         run: |
-          # Find stcgal script location
-          $stcgalScript = (Get-Command stcgal).Source
-          Write-Host "stcgal script at: $stcgalScript"
+          # Create a small entry-point script instead of using the pip wrapper
+          # (the pip-generated stcgal.exe has encoding issues with PyInstaller)
+          $entryScript = "import stcgal.frontend`nstcgal.frontend.cli()"
+          Set-Content -Path "stcgal_entry.py" -Value $entryScript -Encoding UTF8
+          Write-Host "Created stcgal_entry.py"
+          Get-Content stcgal_entry.py
 
           # Build standalone exe with PyInstaller
-          pyinstaller --onefile --name stcgal --hidden-import serial --hidden-import serial.tools --hidden-import serial.tools.list_ports --hidden-import stcgal.protocols --hidden-import stcgal.models --hidden-import stcgal.utils --collect-all stcgal $stcgalScript
+          pyinstaller --onefile --name stcgal --hidden-import serial --hidden-import serial.tools --hidden-import serial.tools.list_ports --hidden-import stcgal.protocols --hidden-import stcgal.models --hidden-import stcgal.utils --collect-all stcgal stcgal_entry.py
 
           # Verify the binary was created
           Get-Item dist\stcgal.exe
