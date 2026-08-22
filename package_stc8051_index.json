@@ -65,15 +65,15 @@
               "host": "x86_64-pc-linux-gnu",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.1/sdcc-4.5.13-linux-x86_64.tar.gz",
               "archiveFileName": "sdcc-4.5.13-linux-x86_64.tar.gz",
-              "checksum": "SHA-256:9d39fad14d188fa3b89156fc3d52418e5a81465ab982e9f6a025552470e28f57",
-              "size": "34603008"
+              "checksum": "SHA-256:04c5ce96dacabb0319a84b4f11dfe9b058a1ba2bc94f19c5fad3a3200116380a",
+              "size": "2871226"
             },
             {
               "host": "x86_64-mingw32",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.1/sdcc-4.5.13-windows-x86_64.zip",
               "archiveFileName": "sdcc-4.5.13-windows-x86_64.zip",
-              "checksum": "SHA-256:8d6f846e633d503746b629d95175dad57fbf9d54b568898c0421020ac47a292a",
-              "size": "42389816"
+              "checksum": "SHA-256:4bae979f129d1d427fae04a73f6683a999e25b4d5f4174a5359d01c87bd53807",
+              "size": "31630359"
             }
           ]
         },
@@ -85,15 +85,15 @@
               "host": "x86_64-pc-linux-gnu",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.1/stcgal-1.0.0-linux-x86_64.tar.gz",
               "archiveFileName": "stcgal-1.0.0-linux-x86_64.tar.gz",
-              "checksum": "SHA-256:a489dc1865985f8e169a296db34f27f11a5cd39b4b9adb4d537da1605b09148d",
-              "size": "488448"
+              "checksum": "SHA-256:89e2599c929e8bd8da9930c9744fc7abcf9dbf0f817ddfb051cf195f9174afd0",
+              "size": "18466852"
             },
             {
               "host": "x86_64-mingw32",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.1/stcgal-1.0.0-windows-x86_64.zip",
               "archiveFileName": "stcgal-1.0.0-windows-x86_64.zip",
-              "checksum": "SHA-256:177dbb5645ce2737212cab76f7937637d0db370620fd8867544a32afbdb365d4",
-              "size": "730403"
+              "checksum": "SHA-256:1f1d4b05e141d2cbca9e6e56700b8282b29884ce13ce3560d0e1ddfd7c322e4c",
+              "size": "9294561"
             }
           ]
         }
