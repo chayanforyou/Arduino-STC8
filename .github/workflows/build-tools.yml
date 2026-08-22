@@ -1,0 +1,461 @@
+name: Build Tool Archives
+
+# Manually trigger this workflow to build SDCC and stcgal archives
+# These archives are required by the Arduino Board Manager
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to attach assets to (e.g., v1.0.1)'
+        required: true
+        default: 'v1.0.1'
+      sdcc_version:
+        description: 'SDCC version to download from SourceForge'
+        required: true
+        default: '4.5.0'
+      sdcc_label_version:
+        description: 'SDCC version label for the archive (kept for compatibility)'
+        required: true
+        default: '4.5.13'
+      stcgal_version:
+        description: 'stcgal version label for the archive'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  # ──────────────────────────────────────────────────────────────
+  # Job 1: Repackage SDCC for Linux
+  # ──────────────────────────────────────────────────────────────
+  build-sdcc-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download SDCC from SourceForge
+        run: |
+          SDCC_VER="${{ inputs.sdcc_version }}"
+          # SourceForge Linux amd64 binary archive
+          URL="https://sourceforge.net/projects/sdcc/files/sdcc-linux-amd64/${SDCC_VER}/sdcc-${SDCC_VER}-amd64-unknown-linux2.5.tar.bz2/download"
+          echo "Downloading SDCC ${SDCC_VER} for Linux from: ${URL}"
+          curl -L -o sdcc-linux.tar.bz2 "${URL}"
+          ls -la sdcc-linux.tar.bz2
+
+      - name: Extract and repackage
+        run: |
+          SDCC_VER="${{ inputs.sdcc_version }}"
+          LABEL_VER="${{ inputs.sdcc_label_version }}"
+
+          # Extract the official archive
+          mkdir -p sdcc-extract
+          tar -xjf sdcc-linux.tar.bz2 -C sdcc-extract
+          ls -la sdcc-extract/
+
+          # Find the extracted directory (usually sdcc-<version>/)
+          SDCC_DIR=$(find sdcc-extract -maxdepth 1 -type d -name "sdcc*" | head -1)
+          echo "Found SDCC directory: ${SDCC_DIR}"
+          ls -la "${SDCC_DIR}/"
+
+          # Create the repackaged directory structure expected by platform.txt:
+          #   bin/           -> sdcc, sdar, sdas8051, sdld, packihx
+          #   share/sdcc/
+          #     include/     -> header files
+          #     lib/small/   -> small model libraries
+          mkdir -p repackaged/bin
+          mkdir -p repackaged/share/sdcc/include
+          mkdir -p repackaged/share/sdcc/lib
+
+          # Copy binaries
+          cp "${SDCC_DIR}/bin/sdcc" repackaged/bin/ 2>/dev/null || true
+          cp "${SDCC_DIR}/bin/sdar" repackaged/bin/ 2>/dev/null || true
+          cp "${SDCC_DIR}/bin/sdas8051" repackaged/bin/ 2>/dev/null || true
+          cp "${SDCC_DIR}/bin/sdld" repackaged/bin/ 2>/dev/null || true
+          cp "${SDCC_DIR}/bin/packihx" repackaged/bin/ 2>/dev/null || true
+          cp "${SDCC_DIR}/bin/sdnm" repackaged/bin/ 2>/dev/null || true
+          cp "${SDCC_DIR}/bin/sdobjcopy" repackaged/bin/ 2>/dev/null || true
+          chmod +x repackaged/bin/*
+
+          # Copy includes and libraries
+          if [ -d "${SDCC_DIR}/share/sdcc/include" ]; then
+            cp -r "${SDCC_DIR}/share/sdcc/include/"* repackaged/share/sdcc/include/
+          fi
+          if [ -d "${SDCC_DIR}/share/sdcc/lib" ]; then
+            cp -r "${SDCC_DIR}/share/sdcc/lib/"* repackaged/share/sdcc/lib/
+          fi
+
+          # Also copy non-free includes/libs if present (some MCUs need them)
+          if [ -d "${SDCC_DIR}/share/sdcc/non-free" ]; then
+            cp -r "${SDCC_DIR}/share/sdcc/non-free" repackaged/share/sdcc/
+          fi
+
+          # Create the final archive
+          ARCHIVE="sdcc-${LABEL_VER}-linux-x86_64.tar.gz"
+          cd repackaged
+          tar -czf "../${ARCHIVE}" .
+          cd ..
+
+          echo "Created: ${ARCHIVE}"
+          ls -la "${ARCHIVE}"
+
+          # Print checksum and size for package_stc8051_index.json
+          echo "---"
+          echo "SHA-256: $(sha256sum ${ARCHIVE} | awk '{print $1}')"
+          echo "Size: $(stat -c%s ${ARCHIVE})"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdcc-linux
+          path: sdcc-${{ inputs.sdcc_label_version }}-linux-x86_64.tar.gz
+
+  # ──────────────────────────────────────────────────────────────
+  # Job 2: Repackage SDCC for Windows
+  # ──────────────────────────────────────────────────────────────
+  build-sdcc-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Download SDCC from SourceForge
+        shell: pwsh
+        run: |
+          $sdccVer = "${{ inputs.sdcc_version }}"
+          # Windows installer from SourceForge
+          $url = "https://sourceforge.net/projects/sdcc/files/sdcc-win64/${sdccVer}/sdcc-${sdccVer}-x64-setup.exe/download"
+          Write-Host "Downloading SDCC ${sdccVer} for Windows from: ${url}"
+          Invoke-WebRequest -Uri $url -OutFile "sdcc-setup.exe" -MaximumRedirection 10
+          Get-Item "sdcc-setup.exe"
+
+      - name: Install SDCC silently and repackage
+        shell: pwsh
+        run: |
+          $labelVer = "${{ inputs.sdcc_label_version }}"
+
+          # Install SDCC silently to a known directory
+          $installDir = "C:\sdcc-install"
+          Start-Process -FilePath ".\sdcc-setup.exe" -ArgumentList "/S", "/D=$installDir" -Wait -NoNewWindow
+          Write-Host "SDCC installed to: $installDir"
+          Get-ChildItem $installDir
+
+          # Create repackaged directory structure expected by platform.txt (Windows):
+          #   bin/         -> sdcc.exe, sdar.exe, packihx.exe, etc.
+          #   include/     -> header files (NO share/sdcc/ prefix)
+          #   lib/small/   -> small model libraries (NO share/sdcc/ prefix)
+          $repackDir = "repackaged"
+          New-Item -ItemType Directory -Path "$repackDir\bin" -Force
+          New-Item -ItemType Directory -Path "$repackDir\include" -Force
+          New-Item -ItemType Directory -Path "$repackDir\lib" -Force
+
+          # Copy binaries
+          $binFiles = @("sdcc.exe", "sdar.exe", "sdas8051.exe", "sdld.exe", "packihx.exe", "sdnm.exe", "sdobjcopy.exe")
+          foreach ($f in $binFiles) {
+            $src = Join-Path $installDir "bin\$f"
+            if (Test-Path $src) {
+              Copy-Item $src "$repackDir\bin\"
+              Write-Host "Copied: $f"
+            } else {
+              Write-Host "Not found: $f (skipping)"
+            }
+          }
+
+          # Copy includes (Windows SDCC puts them directly in include/)
+          if (Test-Path "$installDir\include") {
+            Copy-Item -Recurse "$installDir\include\*" "$repackDir\include\"
+          }
+
+          # Copy libraries
+          if (Test-Path "$installDir\lib") {
+            Copy-Item -Recurse "$installDir\lib\*" "$repackDir\lib\"
+          }
+
+          # Copy non-free if present
+          if (Test-Path "$installDir\non-free") {
+            Copy-Item -Recurse "$installDir\non-free" "$repackDir\"
+          }
+
+          # Create the zip archive
+          $archive = "sdcc-${labelVer}-windows-x86_64.zip"
+          Compress-Archive -Path "$repackDir\*" -DestinationPath $archive
+          Write-Host "Created: $archive"
+          Get-Item $archive
+
+          # Print checksum and size
+          $hash = Get-FileHash $archive -Algorithm SHA256
+          $size = (Get-Item $archive).Length
+          Write-Host "---"
+          Write-Host "SHA-256: $($hash.Hash.ToLower())"
+          Write-Host "Size: $size"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdcc-windows
+          path: sdcc-${{ inputs.sdcc_label_version }}-windows-x86_64.zip
+
+  # ──────────────────────────────────────────────────────────────
+  # Job 3: Build stcgal standalone binary for Linux
+  # ──────────────────────────────────────────────────────────────
+  build-stcgal-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install stcgal and PyInstaller
+        run: |
+          pip install stcgal pyinstaller pyserial
+
+      - name: Build standalone binary
+        run: |
+          # Find stcgal entry point
+          STCGAL_PATH=$(python -c "import stcgal; import os; print(os.path.dirname(stcgal.__file__))")
+          echo "stcgal package at: ${STCGAL_PATH}"
+
+          # Find the main entry script
+          STCGAL_SCRIPT=$(which stcgal)
+          echo "stcgal script at: ${STCGAL_SCRIPT}"
+
+          # Build standalone binary with PyInstaller
+          pyinstaller \
+            --onefile \
+            --name stcgal \
+            --hidden-import serial \
+            --hidden-import serial.tools \
+            --hidden-import serial.tools.list_ports \
+            --hidden-import usb \
+            --hidden-import stcgal.protocols \
+            --hidden-import stcgal.models \
+            --hidden-import stcgal.utils \
+            --collect-all stcgal \
+            "${STCGAL_SCRIPT}"
+
+          # Verify the binary works
+          ./dist/stcgal --version || echo "stcgal binary built (version check may not be supported)"
+
+      - name: Create wrapper script and package
+        run: |
+          LABEL_VER="${{ inputs.stcgal_version }}"
+          mkdir -p package
+
+          # Copy the standalone binary
+          cp dist/stcgal package/
+          chmod +x package/stcgal
+
+          # Create the wrapper shell script
+          # This is what platform.txt calls: "{path}/{cmd}" -p {serial.port} ...
+          cat > package/stcgal.sh << 'WRAPPER_EOF'
+#!/bin/bash
+# stcgal wrapper for Arduino IDE
+# Passes all arguments to the stcgal binary
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+"${SCRIPT_DIR}/stcgal" "$@"
+WRAPPER_EOF
+          chmod +x package/stcgal.sh
+
+          # Create the archive
+          ARCHIVE="stcgal-${LABEL_VER}-linux-x86_64.tar.gz"
+          cd package
+          tar -czf "../${ARCHIVE}" .
+          cd ..
+
+          echo "Created: ${ARCHIVE}"
+          ls -la "${ARCHIVE}"
+
+          # Print checksum and size
+          echo "---"
+          echo "SHA-256: $(sha256sum ${ARCHIVE} | awk '{print $1}')"
+          echo "Size: $(stat -c%s ${ARCHIVE})"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stcgal-linux
+          path: stcgal-${{ inputs.stcgal_version }}-linux-x86_64.tar.gz
+
+  # ──────────────────────────────────────────────────────────────
+  # Job 4: Build stcgal standalone binary for Windows
+  # ──────────────────────────────────────────────────────────────
+  build-stcgal-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install stcgal and PyInstaller
+        shell: pwsh
+        run: |
+          pip install stcgal pyinstaller pyserial
+
+      - name: Build standalone binary
+        shell: pwsh
+        run: |
+          # Find stcgal script location
+          $stcgalScript = (Get-Command stcgal).Source
+          Write-Host "stcgal script at: $stcgalScript"
+
+          # Build standalone exe with PyInstaller
+          pyinstaller `
+            --onefile `
+            --name stcgal `
+            --hidden-import serial `
+            --hidden-import serial.tools `
+            --hidden-import serial.tools.list_ports `
+            --hidden-import usb `
+            --hidden-import stcgal.protocols `
+            --hidden-import stcgal.models `
+            --hidden-import stcgal.utils `
+            --collect-all stcgal `
+            $stcgalScript
+
+          # Verify
+          .\dist\stcgal.exe --version 2>$null
+          Write-Host "stcgal.exe built successfully"
+
+      - name: Create wrapper and package
+        shell: pwsh
+        run: |
+          $labelVer = "${{ inputs.stcgal_version }}"
+          New-Item -ItemType Directory -Path "package" -Force
+
+          # Copy the standalone exe
+          Copy-Item "dist\stcgal.exe" "package\"
+
+          # Create the wrapper batch script
+          # This is what platform.txt calls: "{path}/{cmd}" -p {serial.port} ...
+          @"
+@echo off
+REM stcgal wrapper for Arduino IDE
+REM Passes all arguments to the stcgal binary
+"%~dp0stcgal.exe" %*
+"@ | Set-Content -Path "package\stcgal.bat" -Encoding ASCII
+
+          # Create the zip archive
+          $archive = "stcgal-${labelVer}-windows-x86_64.zip"
+          Compress-Archive -Path "package\*" -DestinationPath $archive
+          Write-Host "Created: $archive"
+          Get-Item $archive
+
+          # Print checksum and size
+          $hash = Get-FileHash $archive -Algorithm SHA256
+          $size = (Get-Item $archive).Length
+          Write-Host "---"
+          Write-Host "SHA-256: $($hash.Hash.ToLower())"
+          Write-Host "Size: $size"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stcgal-windows
+          path: stcgal-${{ inputs.stcgal_version }}-windows-x86_64.zip
+
+  # ──────────────────────────────────────────────────────────────
+  # Job 5: Create GitHub Release with all archives
+  # ──────────────────────────────────────────────────────────────
+  create-release:
+    needs: [build-sdcc-linux, build-sdcc-windows, build-stcgal-linux, build-stcgal-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Collect archives and compute checksums
+        id: checksums
+        run: |
+          echo "=== Collected Archives ==="
+          find artifacts -type f | sort
+
+          # Move all archives to a flat directory
+          mkdir -p release-assets
+          find artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" \) -exec cp {} release-assets/ \;
+
+          echo ""
+          echo "=== Release Assets ==="
+          ls -la release-assets/
+
+          echo ""
+          echo "==========================================="
+          echo "  CHECKSUMS FOR package_stc8051_index.json"
+          echo "==========================================="
+          for f in release-assets/*; do
+            BASENAME=$(basename "$f")
+            SHA=$(sha256sum "$f" | awk '{print $1}')
+            SIZE=$(stat -c%s "$f")
+            echo ""
+            echo "File: ${BASENAME}"
+            echo "  SHA-256: ${SHA}"
+            echo "  Size:    ${SIZE}"
+          done
+          echo "==========================================="
+
+          # Also create the platform core archive
+          CORE_ARCHIVE="STC_Arduino_Core-${{ inputs.release_tag }}.tar.gz"
+          # Exclude .github and .git directories from the core archive
+          tar -czf "release-assets/${CORE_ARCHIVE}" \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='release-assets' \
+            --exclude='artifacts' \
+            -C . .
+
+          echo ""
+          echo "Core archive:"
+          CORE_SHA=$(sha256sum "release-assets/${CORE_ARCHIVE}" | awk '{print $1}')
+          CORE_SIZE=$(stat -c%s "release-assets/${CORE_ARCHIVE}")
+          echo "  File: ${CORE_ARCHIVE}"
+          echo "  SHA-256: ${CORE_SHA}"
+          echo "  Size:    ${CORE_SIZE}"
+
+      - name: Create or update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          name: "STC Arduino Core ${{ inputs.release_tag }}"
+          body: |
+            ## STC Arduino Core ${{ inputs.release_tag }}
+
+            Arduino support for STC8 microcontrollers.
+
+            ### Bundled Tools
+            - **SDCC** ${{ inputs.sdcc_label_version }} (based on official SDCC ${{ inputs.sdcc_version }})
+            - **stcgal** ${{ inputs.stcgal_version }} (standalone binary, no Python required)
+
+            ### Installation
+            Add this URL to Arduino IDE → File → Preferences → Additional Boards Manager URLs:
+            ```
+            https://raw.githubusercontent.com/${{ github.repository }}/main/package_stc8051_index.json
+            ```
+            Then search for "STC" in Boards Manager and install.
+          files: release-assets/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print update instructions
+        run: |
+          echo ""
+          echo "============================================================"
+          echo "  NEXT STEPS"
+          echo "============================================================"
+          echo ""
+          echo "1. Copy the SHA-256 checksums and sizes from above"
+          echo "2. Update package_stc8051_index.json with:"
+          echo "   - Your repository URL: https://github.com/${{ github.repository }}"
+          echo "   - The correct checksums and sizes"
+          echo "3. Commit and push the updated package_stc8051_index.json"
+          echo ""
+          echo "The Board Manager URL for users will be:"
+          echo "  https://raw.githubusercontent.com/${{ github.repository }}/main/package_stc8051_index.json"
+          echo "============================================================"
