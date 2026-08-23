@@ -7,7 +7,7 @@ compiler.path={runtime.tools.sdcc.path}/bin/
 compiler.wrapper.path={runtime.platform.path}/tools/wrapper
 
 # Warning flags
-compiler.warning_flags=--less-pedantic
+compiler.warning_flags=--less-pedantic --disable-warning 110 --disable-warning 126 --disable-warning 283
 
 # Compiler commands
 compiler.c.cmd=sdcc
@@ -21,6 +21,7 @@ compiler.c.elf.wrapper=sdcc-link.sh
 compiler.elf2hex.cmd=packihx
 compiler.elf2hex.wrapper=packihx.sh
 compiler.size.cmd=cat
+compiler.size.wrapper=size.sh
 
 # OS-specific wrapper extensions
 compiler.c.wrapper.windows=sdcc.bat
@@ -28,8 +29,9 @@ compiler.cpp.wrapper.windows=sdcc.bat
 compiler.ar.wrapper.windows=sdar.bat
 compiler.c.elf.wrapper.windows=sdcc-link.bat
 compiler.elf2hex.wrapper.windows=packihx.bat
+compiler.size.wrapper.windows=size.bat
 
-compiler.c.flags=-MMD -c -Ddouble=float -DUSE_STDINT -D__PROG_TYPES_COMPAT__ {compiler.warning_flags}
+compiler.c.flags=-MMD -c -Ddouble=float -DUSE_STDINT -D__PROG_TYPES_COMPAT__ --opt-code-size {compiler.warning_flags}
 compiler.cpp.flags={compiler.c.flags}
 compiler.ar.flags=rcs
 compiler.c.elf.flags=--nostdlib --code-size {upload.maximum_size} --xram-size {upload.maximum_data_size} --xram-loc {upload.xdata_location}
@@ -62,7 +64,7 @@ recipe.c.combine.pattern="{compiler.wrapper.path}/{compiler.c.elf.wrapper}" "{co
 recipe.objcopy.hex.pattern="{compiler.wrapper.path}/{compiler.elf2hex.wrapper}" "{compiler.path}{compiler.elf2hex.cmd}" "{build.path}/{build.project_name}.ihx" "{build.path}/{build.project_name}.hex"
 
 ## Compute size
-recipe.size.pattern="{compiler.size.cmd}" "{build.path}/{build.project_name}.mem"
+recipe.size.pattern="{compiler.wrapper.path}/{compiler.size.wrapper}" "{build.path}/{build.project_name}.mem"
 recipe.size.regex=^(?:\s+ROM\/EPROM\/FLASH)\s+0x[A-Fa-f0-9]+\s+0x[A-Fa-f0-9]+\s+([0-9]+).*
 recipe.size.regex.data=^(?:\s+EXTERNAL RAM)\s+0x[A-Fa-f0-9]+\s+0x[A-Fa-f0-9]+\s+([0-9]+).*
 

@@ -54,6 +54,7 @@ done
 # Iteratively resolve undefined symbols by adding needed drivers
 NEEDED_DRIVERS=""
 MAX_ITERATIONS=10
+LINK_RESULT=1
 
 for iteration in $(seq 1 $MAX_ITERATIONS); do
     # Try linking with current set
@@ -66,18 +67,20 @@ for iteration in $(seq 1 $MAX_ITERATIONS); do
     fi
     
     # Extract undefined symbol names from error output
-    # The format is: "?ASlink-Warning-Undefined Global _symbol_name referenced by module"
-    # We want to extract "symbol_name" (without the leading underscore)
-    UNDEFINED=$(grep -oP "(?<=Undefined Global _)[^\s]+" /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
-    
-    # If that didn't work, try alternative format
+    UNDEFINED=$(grep -oP "(?<=Undefined Global ')[^']*" /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
+    if [ -z "$UNDEFINED" ]; then
+        UNDEFINED=$(grep -oP "(?<=Undefined Global _)[^\s]+" /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
+    fi
+    if [ -z "$UNDEFINED" ]; then
+        UNDEFINED=$(grep -oP "(?<=Undefined: ')[^']*" /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
+    fi
     if [ -z "$UNDEFINED" ]; then
         UNDEFINED=$(grep -oP "(?<=Undefined: _)[^\s]+" /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
     fi
+    UNDEFINED="${UNDEFINED#_}"
     
     # If no undefined symbols found, stop
     if [ -z "$UNDEFINED" ]; then
-        # Show the actual error and exit
         cat /tmp/sdcc_link_$$.txt >&2
         break
     fi
@@ -85,7 +88,6 @@ for iteration in $(seq 1 $MAX_ITERATIONS); do
     # Search for which driver file provides this symbol
     FOUND_DRIVER=""
     for DRIVER in $DRIVER_FILES; do
-        # Skip if already added
         if echo "$NEEDED_DRIVERS" | grep -q "$DRIVER"; then
             continue
         fi
@@ -97,19 +99,13 @@ for iteration in $(seq 1 $MAX_ITERATIONS); do
         fi
     done
     
-    # If we found the driver, add it
     if [ -n "$FOUND_DRIVER" ]; then
         NEEDED_DRIVERS="$NEEDED_DRIVERS $FOUND_DRIVER"
     else
-        # No driver provides this symbol, stop trying
         cat /tmp/sdcc_link_$$.txt >&2
         break
     fi
 done
-
-# Final link with all needed drivers
-$SDCC $FLAGS $REL_FILES $NEEDED_DRIVERS
-RESULT=$?
 
 # Cleanup
 for FILE in $CLEANUP_FILES; do
@@ -117,4 +113,4 @@ for FILE in $CLEANUP_FILES; do
 done
 rm -f /tmp/sdcc_link_$$.txt
 
-exit $RESULT
+exit $LINK_RESULT

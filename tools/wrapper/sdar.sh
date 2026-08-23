@@ -29,4 +29,5 @@ fi
 # Cleanup temporary .rel file
 rm -f "$OBJECT_REL"
 
-exit 0
+# Propagate sdar exit code
+exit $?

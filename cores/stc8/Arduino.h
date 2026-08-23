@@ -8,7 +8,7 @@
 #include "interrupt.h"
 
 // Arduino Pin Definitions (map to STC8G pins)
-#define LED_BUILTIN 13
+#define LED_BUILTIN P5_5
 
 // Pin modes
 #define INPUT           0x00
@@ -18,6 +18,10 @@
 // Digital values
 #define LOW     0
 #define HIGH    1
+
+// Standard Arduino delay aliases
+#define delay(ms)              delay_ms(ms)
+#define delayMicroseconds(us)  delay_us(us)
 
 // ====================================================================================
 // BIT MANIPULATION MACROS
