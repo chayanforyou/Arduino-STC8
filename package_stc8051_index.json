@@ -16,8 +16,8 @@
           "category": "Contributed",
           "url": "https://github.com/chayanforyou/Arduino-STC8/archive/refs/tags/v1.0.0.tar.gz",
           "archiveFileName": "STC_Arduino_Core-1.0.0.tar.gz",
-          "checksum": "SHA-256:15ea40ad2faf5c7babf6861c964da9c4159d75a9c8cee7ef6769a7a2140443fb",
-          "size": "17654",
+          "checksum": "SHA-256:304d58f5a4a1228a42c214bea70e0e0e7391b2ed9fe7ad5713e07e20645869de",
+          "size": "22393",
           "boards": [{ "name": "STC8G1K08A" }],
           "toolsDependencies": [
             {
