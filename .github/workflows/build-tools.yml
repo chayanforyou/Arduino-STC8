@@ -1,6 +1,6 @@
 name: Build Tool Archives
 
-# Manually trigger this workflow to build SDCC and stcgal archives
+# Manually trigger this workflow to package SDCC and build stcgal archives
 # These archives are required by the Arduino Board Manager
 on:
   workflow_dispatch:
@@ -20,73 +20,20 @@ on:
 
 jobs:
   # ──────────────────────────────────────────────────────────────
-  # Job 1: Package SDCC for Linux
-  # Uses apt to install SDCC (avoids SourceForge download issues)
+  # Job 1: Download pre-built SDCC for Linux
   # ──────────────────────────────────────────────────────────────
   build-sdcc-linux:
     runs-on: ubuntu-latest
     steps:
-      - name: Install SDCC via apt
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y sdcc
-
-      - name: Repackage SDCC
+      - name: Download pre-built SDCC for Linux
         run: |
           LABEL_VER="${{ inputs.sdcc_label_version }}"
-
-          # Create the directory structure expected by platform.txt:
-          #   bin/           -> sdcc, sdar, sdas8051, sdld, packihx
-          #   share/sdcc/
-          #     include/     -> header files
-          #     lib/small/   -> small model libraries
-          mkdir -p sdcc/bin
-          mkdir -p sdcc/share/sdcc
-
-          # Copy binaries from system install
-          for bin in sdcc sdar sdas8051 sdld packihx sdnm sdobjcopy; do
-            SRC=$(which $bin 2>/dev/null || true)
-            if [ -n "$SRC" ]; then
-              cp "$SRC" sdcc/bin/
-              echo "Copied: $bin -> sdcc/bin/"
-            else
-              echo "Not found: $bin (skipping)"
-            fi
-          done
-          chmod +x sdcc/bin/*
-
-          # Copy includes and libraries from system paths
-          SDCC_SHARE=$(sdcc --print-search-dirs 2>/dev/null | grep datadir | awk '{print $2}' || echo "/usr/share/sdcc")
-          echo "SDCC share dir: $SDCC_SHARE"
-
-          if [ -d "$SDCC_SHARE/include" ]; then
-            cp -r "$SDCC_SHARE/include" sdcc/share/sdcc/
-          elif [ -d "/usr/share/sdcc/include" ]; then
-            cp -r /usr/share/sdcc/include sdcc/share/sdcc/
-          fi
-
-          if [ -d "$SDCC_SHARE/lib" ]; then
-            cp -r "$SDCC_SHARE/lib" sdcc/share/sdcc/
-          elif [ -d "/usr/share/sdcc/lib" ]; then
-            cp -r /usr/share/sdcc/lib sdcc/share/sdcc/
-          fi
-
-          if [ -d "$SDCC_SHARE/non-free" ]; then
-            cp -r "$SDCC_SHARE/non-free" sdcc/share/sdcc/
-          elif [ -d "/usr/share/sdcc/non-free" ]; then
-            cp -r /usr/share/sdcc/non-free sdcc/share/sdcc/
-          fi
-
-          # Show what we packaged
-          echo "=== Package contents ==="
-          find sdcc -type f | head -30
-          echo "..."
-
-          # Create the final archive containing top-level root folder
           ARCHIVE="sdcc-${LABEL_VER}-linux-x86_64.tar.gz"
-          tar -czf "${ARCHIVE}" sdcc
+          URL="https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/${ARCHIVE}"
+          echo "Downloading SDCC Linux from: ${URL}"
+          curl -fL -o "${ARCHIVE}" "${URL}"
 
-          echo "Created: ${ARCHIVE}"
+          echo "Downloaded: ${ARCHIVE}"
           ls -la "${ARCHIVE}"
 
           # Print checksum and size for package_stc8051_index.json
@@ -101,117 +48,21 @@ jobs:
           path: sdcc-${{ inputs.sdcc_label_version }}-linux-x86_64.tar.gz
 
   # ──────────────────────────────────────────────────────────────
-  # Job 2: Package SDCC for Windows
-  # Uses choco to install SDCC (avoids SourceForge download issues)
+  # Job 2: Download pre-built SDCC for Windows
   # ──────────────────────────────────────────────────────────────
   build-sdcc-windows:
     runs-on: windows-latest
     steps:
-      - name: Install SDCC on Windows
-        shell: pwsh
-        run: |
-          try {
-            Write-Host "Attempting SDCC installation via Winget..."
-            winget install SDCC.SDCC --accept-source-agreements --accept-package-agreements -e --silent
-          } catch {
-            Write-Host "Winget failed or not available, falling back to direct setup download..."
-          }
-
-          # Check if SDCC installed
-          $sdccExe = Get-Command sdcc.exe -ErrorAction SilentlyContinue
-          if (-not $sdccExe -and -not (Test-Path "C:\Program Files\SDCC\bin\sdcc.exe")) {
-            Write-Host "Downloading SDCC 4.5.0 installer..."
-            $url = "https://sourceforge.net/projects/sdcc/files/sdcc-win64/4.5.0/sdcc-4.5.0-x64-setup.exe/download"
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            $webClient = New-Object System.Net.WebClient
-            $webClient.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-            $webClient.DownloadFile($url, "sdcc-setup.exe")
-            
-            Write-Host "Installing SDCC silently to C:\SDCC..."
-            Start-Process -FilePath ".\sdcc-setup.exe" -ArgumentList "/S", "/D=C:\SDCC" -Wait
-          }
-
-      - name: Repackage SDCC
+      - name: Download pre-built SDCC for Windows
         shell: pwsh
         run: |
           $labelVer = "${{ inputs.sdcc_label_version }}"
-
-          # Find the actual SDCC install directory dynamically
-          # Choco may install to various locations, so find sdcc.exe first
-          $sdccExe = Get-Command sdcc.exe -ErrorAction SilentlyContinue
-          if (-not $sdccExe) {
-            # Search common locations
-            $searchPaths = @(
-              "C:\SDCC",
-              "C:\Program Files\SDCC",
-              "C:\Program Files (x86)\SDCC",
-              "C:\tools\sdcc",
-              "C:\ProgramData\chocolatey\lib\sdcc\tools"
-            )
-            foreach ($p in $searchPaths) {
-              $candidate = Join-Path $p "bin\sdcc.exe"
-              if (Test-Path $candidate) {
-                $sdccExe = Get-Item $candidate
-                break
-              }
-            }
-          }
-          if (-not $sdccExe) {
-            Write-Error "Could not find sdcc.exe!"
-            exit 1
-          }
-
-          # Derive the install directory (go up from bin/sdcc.exe)
-          $sdccBinDir = if ($sdccExe.Source) { Split-Path $sdccExe.Source } else { Split-Path $sdccExe.FullName }
-          $sdccDir = Split-Path $sdccBinDir
-          Write-Host "SDCC found at: $sdccDir"
-          Get-ChildItem $sdccDir
-
-          # Create repackaged directory structure expected by platform.txt (Windows):
-          #   sdcc/
-          #     bin/         -> sdcc.exe, sdar.exe, packihx.exe, etc.
-          #     include/     -> header files (NO share/sdcc/ prefix)
-          #     lib/         -> libraries (NO share/sdcc/ prefix)
-          $repackDir = "sdcc"
-          New-Item -ItemType Directory -Path "$repackDir\bin" -Force
-          New-Item -ItemType Directory -Path "$repackDir\include" -Force
-          New-Item -ItemType Directory -Path "$repackDir\lib" -Force
-
-          # Copy binaries
-          $binFiles = @("sdcc.exe", "sdar.exe", "sdas8051.exe", "sdld.exe", "packihx.exe", "sdnm.exe", "sdobjcopy.exe")
-          foreach ($f in $binFiles) {
-            $src = Join-Path $sdccDir "bin\$f"
-            if (Test-Path $src) {
-              Copy-Item $src "$repackDir\bin\"
-              Write-Host "Copied: $f"
-            } else {
-              Write-Host "Not found: $f (skipping)"
-            }
-          }
-
-          # Copy includes
-          if (Test-Path "$sdccDir\include") {
-            Copy-Item -Recurse "$sdccDir\include\*" "$repackDir\include\"
-          }
-
-          # Copy libraries
-          if (Test-Path "$sdccDir\lib") {
-            Copy-Item -Recurse "$sdccDir\lib\*" "$repackDir\lib\"
-          }
-
-          # Copy non-free if present
-          if (Test-Path "$sdccDir\non-free") {
-            Copy-Item -Recurse "$sdccDir\non-free" "$repackDir\"
-          }
-
-          # Show what we packaged
-          Write-Host "=== Package contents ==="
-          Get-ChildItem -Recurse $repackDir | Select-Object -First 30
-
-          # Create the zip archive with top-level root directory
           $archive = "sdcc-${labelVer}-windows-x86_64.zip"
-          Compress-Archive -Path $repackDir -DestinationPath $archive
-          Write-Host "Created: $archive"
+          $url = "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/${archive}"
+          Write-Host "Downloading SDCC Windows from: $url"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+
+          Write-Host "Downloaded: $archive"
           Get-Item $archive
 
           # Print checksum and size
@@ -325,8 +176,6 @@ jobs:
       - name: Build standalone binary
         shell: pwsh
         run: |
-          # Create a small entry-point script instead of using the pip wrapper
-          # (the pip-generated stcgal.exe has encoding issues with PyInstaller)
           $entryScript = "import stcgal.frontend`nstcgal.frontend.cli()"
           Set-Content -Path "stcgal_entry.py" -Value $entryScript -Encoding UTF8
           Write-Host "Created stcgal_entry.py"
