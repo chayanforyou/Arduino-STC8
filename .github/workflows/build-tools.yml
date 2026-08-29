@@ -27,6 +27,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Package STC Arduino Core
+        run: |
+          mkdir -p release-assets
+          CORE_VER="${{ inputs.release_tag }}"
+          CORE_VER="${CORE_VER#v}"
+          echo "CORE_VER=${CORE_VER}" >> $GITHUB_ENV
+          CORE_ARCHIVE="STC_Arduino_Core-${CORE_VER}.zip"
+          echo "CORE_ARCHIVE=${CORE_ARCHIVE}" >> $GITHUB_ENV
+
+          echo "Packaging STC Arduino Core into ${CORE_ARCHIVE}..."
+          # Ensure execution permissions for wrapper scripts
+          chmod -R +x tools/wrapper/*.sh tools/wrapper/*.py 2>/dev/null || true
+
+          # Create core zip archive
+          zip -r "release-assets/${CORE_ARCHIVE}" boards.txt platform.txt programmers.txt cores libraries tools variants README.md
+
+          echo "Created release-assets/${CORE_ARCHIVE}"
+
       - name: Download pre-built tool archives
         run: |
           SDCC_VER="${{ inputs.sdcc_label_version }}"
@@ -72,7 +90,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag }}
-          name: "STC Arduino Core ${{ inputs.release_tag }}"
+          name: ${{ inputs.release_tag }}
           body: |
             ## STC Arduino Core ${{ inputs.release_tag }}
 
