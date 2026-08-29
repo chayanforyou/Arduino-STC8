@@ -33,15 +33,21 @@ jobs:
           CORE_VER="${{ inputs.release_tag }}"
           CORE_VER="${CORE_VER#v}"
           echo "CORE_VER=${CORE_VER}" >> $GITHUB_ENV
-          CORE_ARCHIVE="STC_Arduino_Core-${CORE_VER}.zip"
+          CORE_FOLDER="Arduino-STC8"
+          CORE_ARCHIVE="Arduino-STC8-${CORE_VER}.zip"
           echo "CORE_ARCHIVE=${CORE_ARCHIVE}" >> $GITHUB_ENV
 
           echo "Packaging STC Arduino Core into ${CORE_ARCHIVE}..."
           # Ensure execution permissions for wrapper scripts
           chmod -R +x tools/wrapper/*.sh tools/wrapper/*.py 2>/dev/null || true
 
-          # Create core zip archive
-          zip -r "release-assets/${CORE_ARCHIVE}" boards.txt platform.txt programmers.txt cores libraries tools variants README.md
+          # Prepare folder structure
+          mkdir -p "${CORE_FOLDER}"
+          cp -r boards.txt platform.txt programmers.txt cores libraries tools variants README.md "${CORE_FOLDER}/"
+
+          # Create core zip archive containing the root folder
+          zip -r "release-assets/${CORE_ARCHIVE}" "${CORE_FOLDER}"
+          rm -rf "${CORE_FOLDER}"
 
           echo "Created release-assets/${CORE_ARCHIVE}"
 

@@ -10,12 +10,12 @@
       },
       "platforms": [
         {
-          "name": "STC Boards",
+          "name": "Arduino-STC8",
           "architecture": "stc8",
           "version": "1.0.0",
           "category": "Contributed",
-          "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.0/STC_Arduino_Core-1.0.0.zip",
-          "archiveFileName": "STC_Arduino_Core-1.0.0.zip",
+          "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.0/Arduino-STC8-1.0.0.zip",
+          "archiveFileName": "Arduino-STC8-1.0.0.zip",
           "checksum": "SHA-256:84c9855031adea6daf82aad6f8b3be916c25e38c56d113443ff0cfd9616e3b69",
           "size": "32643",
           "boards": [{ "name": "STC8G1K08A" }],
