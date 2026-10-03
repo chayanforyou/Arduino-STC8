@@ -15,7 +15,7 @@ while [ $# -gt 0 ]; do
     case "$ARG" in
         *.o)
             REL_FILE="${ARG%.o}.rel"
-            if [ -f "$ARG" ] && [ ! -f "$REL_FILE" ]; then
+            if [ -f "$ARG" ] && ([ ! -f "$REL_FILE" ] || [ "$ARG" -nt "$REL_FILE" ]); then
                 cp "$ARG" "$REL_FILE"
                 CLEANUP_FILES="$CLEANUP_FILES $REL_FILE"
             fi
@@ -31,7 +31,7 @@ while [ $# -gt 0 ]; do
             ;;
         *.a)
             LIB_FILE="${ARG%.a}.lib"
-            if [ -f "$ARG" ] && [ ! -f "$LIB_FILE" ]; then
+            if [ -f "$ARG" ] && ([ ! -f "$LIB_FILE" ] || [ "$ARG" -nt "$LIB_FILE" ]); then
                 cp "$ARG" "$LIB_FILE"
                 CLEANUP_FILES="$CLEANUP_FILES $LIB_FILE"
             fi

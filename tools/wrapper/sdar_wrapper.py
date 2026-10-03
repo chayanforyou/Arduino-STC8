@@ -18,7 +18,7 @@ obj_rel = obj[:-2] + '.rel' if obj.lower().endswith('.o') else obj
 
 # Only copy if needed
 created_rel = False
-if not os.path.exists(obj_rel) and os.path.exists(obj):
+if os.path.exists(obj) and (not os.path.exists(obj_rel) or os.path.getmtime(obj) > os.path.getmtime(obj_rel)):
     shutil.copy2(obj, obj_rel)
     created_rel = True
 

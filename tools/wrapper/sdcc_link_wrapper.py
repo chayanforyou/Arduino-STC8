@@ -1,8 +1,9 @@
-import sys
-import subprocess
 import os
 import shutil
+import subprocess
+import sys
 
+# Setup SDCC binary and PATH
 sdcc = sys.argv[1].replace('/', '\\')
 if sdcc.endswith('sdcc'):
     sdcc += '.exe'
@@ -17,91 +18,79 @@ rel_files = []
 driver_files = []
 cleanup = []
 
+
+def prepare_file(path, old_ext, new_ext):
+    """Convert object/archive extension (.o -> .rel, .a -> .lib) if newer."""
+    if path.endswith(old_ext):
+        target = path[:-len(old_ext)] + new_ext
+        if os.path.exists(path) and (not os.path.exists(target) or os.path.getmtime(path) > os.path.getmtime(target)):
+            shutil.copy2(path, target)
+            cleanup.append(target)
+        return target if os.path.exists(target) else path
+    return path
+
+
+def parse_symbols(filepath, sym_type):
+    """Extract defined ('Def') or referenced ('Ref') symbols from a .rel/.lib file."""
+    symbols = set()
+    try:
+        with open(filepath, 'r', errors='ignore') as f:
+            for line in f:
+                if line.startswith('S _'):
+                    parts = line.split()
+                    if len(parts) >= 3 and parts[2].startswith(sym_type):
+                        symbols.add(parts[1])
+    except OSError:
+        pass
+    return symbols
+
+
 # Parse arguments: categorize .o/.a files vs flags
 for arg in sys.argv[2:]:
     norm = arg.replace('/', '\\')
-
     if norm.endswith('.o'):
-        rel = norm[:-2] + '.rel'
-        if not os.path.exists(rel) and os.path.exists(norm):
-            shutil.copy2(norm, rel)
-            cleanup.append(rel)
-        target = rel if os.path.exists(rel) else norm
+        target = prepare_file(norm, '.o', '.rel')
         if 'drivers\\src\\' in norm.lower() or 'drivers/src/' in arg.lower():
             driver_files.append(target)
         else:
             rel_files.append(target)
-
     elif norm.endswith('.a'):
-        lib = norm[:-2] + '.lib'
-        if not os.path.exists(lib) and os.path.exists(norm):
-            shutil.copy2(norm, lib)
-            cleanup.append(lib)
-        rel_files.append(lib if os.path.exists(lib) else norm)
-
+        rel_files.append(prepare_file(norm, '.a', '.lib'))
     else:
         flags.append(norm)
 
-# Single-pass driver resolution by scanning .rel symbol tables
+# Single-pass driver resolution: only link drivers that supply referenced symbols
 needed_drivers = []
-
 if driver_files:
-    # Build symbol table: which driver defines which symbol
-    driver_symbols = {}  # symbol_name -> driver_path
-    for drv in driver_files:
-        try:
-            with open(drv, 'r', errors='ignore') as f:
-                for line in f:
-                    # Format: "S _clock_init Def000000"
-                    if line.startswith('S _'):
-                        parts = line.split()
-                        if len(parts) >= 3 and parts[2].startswith('Def'):
-                            driver_symbols[parts[1]] = drv
-        except OSError:
-            pass
+    # Map defined symbol -> driver file
+    driver_symbols = {
+        sym: drv
+        for drv in driver_files
+        for sym in parse_symbols(drv, 'Def')
+    }
 
-    # Collect all undefined symbols from non-driver .rel/.lib files
-    undefined = set()
-    for rf in rel_files:
-        try:
-            with open(rf, 'r', errors='ignore') as f:
-                for line in f:
-                    # Format: "S _clock_init Ref000000"
-                    if line.startswith('S _'):
-                        parts = line.split()
-                        if len(parts) >= 3 and parts[2].startswith('Ref'):
-                            undefined.add(parts[1])
-        except OSError:
-            pass
+    # Collect undefined references from sketch & core files
+    undefined = {sym for rf in rel_files for sym in parse_symbols(rf, 'Ref')}
 
-    # Resolve: a needed driver may itself reference other drivers
+    # Iteratively resolve chained driver dependencies
     resolved = set()
     to_resolve = set(undefined)
     while to_resolve:
         new_refs = set()
         for sym in to_resolve:
-            if sym in driver_symbols and driver_symbols[sym] not in resolved:
-                drv = driver_symbols[sym]
+            drv = driver_symbols.get(sym)
+            if drv and drv not in resolved:
                 resolved.add(drv)
                 needed_drivers.append(drv)
-                # Scan this driver for its own undefined references
-                try:
-                    with open(drv, 'r', errors='ignore') as f:
-                        for line in f:
-                            if line.startswith('S _'):
-                                parts = line.split()
-                                if len(parts) >= 3 and parts[2].startswith('Ref'):
-                                    new_refs.add(parts[1])
-                except OSError:
-                    pass
+                new_refs |= parse_symbols(drv, 'Ref')
         to_resolve = new_refs - undefined
         undefined |= new_refs
 
-# Link once with all resolved drivers
+# Execute link
 cmd = [sdcc] + flags + rel_files + needed_drivers
 result = subprocess.run(cmd, env=env)
 
-# Cleanup temp files
+# Cleanup temporary files
 for f in cleanup:
     try:
         os.remove(f)

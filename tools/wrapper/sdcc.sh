@@ -191,6 +191,9 @@ if [ -f ${REL} ]; then
             sed -i'' -e "s/A GSFINAL size 3/A GSFINAL size 4/g" ${REL}
         fi
     fi
+    if [[ ${OBJ%.o} != $OBJ && -f "${REL}" ]]; then
+        cp -a "${REL}" "${OBJ}" 2>/dev/null || true
+    fi
 fi
 # propagate the sdcc exit code
 exit $ERR
