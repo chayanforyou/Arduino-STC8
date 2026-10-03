@@ -6,6 +6,7 @@
 #include "variant.h"
 #include "HardwareSerial.h"
 #include "interrupt.h"
+#include "EEPROM.h"
 
 // Arduino Pin Definitions (map to STC8G pins)
 #define LED_BUILTIN P5_5
