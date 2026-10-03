@@ -2,6 +2,8 @@
   Button
   Reads a digital input on pin P3_2, controls LED on P5_5
   
+  by Chayan Mistry
+
   This example code is in the public domain.
 */
 

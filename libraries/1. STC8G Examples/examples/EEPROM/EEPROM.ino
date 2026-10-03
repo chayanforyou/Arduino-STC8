@@ -1,3 +1,12 @@
+/*
+  EEPROM
+  Demonstrates reading, writing, and erasing data on STC8 EEPROM / Data Flash
+  
+  by Chayan Mistry
+
+  This example code is in the public domain.
+*/
+
 #include <EEPROM.h>
 
 void setup() {

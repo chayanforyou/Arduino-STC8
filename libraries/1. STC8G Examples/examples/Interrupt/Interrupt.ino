@@ -2,6 +2,8 @@
   Button Interrupt
   Uses external interrupt to detect button press on P3_2
   
+  by Chayan Mistry
+
   This example code is in the public domain.
 */
 

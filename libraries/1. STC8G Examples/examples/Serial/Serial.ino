@@ -2,6 +2,8 @@
   Serial Echo
   Echoes received serial data back and demonstrates serial functions
   
+  by Chayan Mistry
+
   This example code is in the public domain.
 */
 

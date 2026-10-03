@@ -2,6 +2,8 @@
   Blink Without Delay
   Uses micros() or millis() for non-blocking LED blinking
   
+  by Chayan Mistry
+
   This example code is in the public domain.
 */
 
