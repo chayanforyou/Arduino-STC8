@@ -12,6 +12,29 @@
         {
           "name": "Arduino-STC8",
           "architecture": "stc8",
+          "version": "1.1.0",
+          "category": "Contributed",
+          "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.1.0/Arduino-STC8-1.1.0.zip",
+          "archiveFileName": "Arduino-STC8-1.1.0.zip",
+          "checksum": "SHA-256:a9e107ad3b320fb70670e2d24405612ce37c3db6c6fcb79ce029886d271635b1",
+          "size": "38475",
+          "boards": [{ "name": "STC8G1K08A" }],
+          "toolsDependencies": [
+            {
+              "packager": "stc8051",
+              "name": "sdcc",
+              "version": "4.5.0"
+            },
+            {
+              "packager": "stc8051",
+              "name": "stcgal",
+              "version": "1.10"
+            }
+          ]
+        },
+        {
+          "name": "Arduino-STC8",
+          "architecture": "stc8",
           "version": "1.0.0",
           "category": "Contributed",
           "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.0/Arduino-STC8-1.0.0.zip",
@@ -90,15 +113,15 @@
               "host": "x86_64-apple-darwin",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-1.10-macos-universal.tar.gz",
               "archiveFileName": "stcgal-1.10-macos-universal.tar.gz",
-              "checksum": "SHA-256:3d3c3742e0b8d90c84894e42c282d452a9396515fe7ed86f4b2faf4142eab641",
-              "size": "7047153"
+              "checksum": "SHA-256:2e7f3cd23ff65edd3df01982084ec8da514922de6a5e3e2063c90013cb95bd39",
+              "size": "490094"
             },
             {
               "host": "arm64-apple-darwin",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-1.10-macos-universal.tar.gz",
               "archiveFileName": "stcgal-1.10-macos-universal.tar.gz",
-              "checksum": "SHA-256:3d3c3742e0b8d90c84894e42c282d452a9396515fe7ed86f4b2faf4142eab641",
-              "size": "7047153"
+              "checksum": "SHA-256:2e7f3cd23ff65edd3df01982084ec8da514922de6a5e3e2063c90013cb95bd39",
+              "size": "490094"
             }
           ]
         }
