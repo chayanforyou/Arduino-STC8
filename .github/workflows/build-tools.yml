@@ -1,22 +1,14 @@
-name: Build Tool Archives
+name: Release Core Package
 
-# Manually trigger this workflow to package SDCC and build stcgal archives
-# These archives are required by the Arduino Board Manager
+# Manually trigger this workflow to package and release the STC8 Arduino Core
+# Creates the core zip archive required by the Arduino Board Manager
 on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag to attach assets to (e.g., v1.0.0)'
+        description: 'Release tag (e.g., v1.0.0)'
         required: true
         default: 'v1.0.0'
-      sdcc_label_version:
-        description: 'SDCC official version'
-        required: true
-        default: '4.5.0'
-      stcgal_version:
-        description: 'stcgal official version'
-        required: true
-        default: '1.10'
 
 jobs:
   download-and-release:
@@ -51,31 +43,6 @@ jobs:
 
           echo "Created release-assets/${CORE_ARCHIVE}"
 
-      - name: Download pre-built tool archives
-        run: |
-          SDCC_VER="${{ inputs.sdcc_label_version }}"
-          STCGAL_VER="${{ inputs.stcgal_version }}"
-          BASE_URL="https://github.com/chayanforyou/Arduino-STC8/releases/download/tools"
-
-          mkdir -p release-assets
-
-          # List of archives to download
-          FILES=(
-            "sdcc-${SDCC_VER}-linux-x86_64.tar.gz"
-            "sdcc-${SDCC_VER}-windows-x86_64.zip"
-            "stcgal-${STCGAL_VER}-linux-x86_64.tar.gz"
-            "stcgal-${STCGAL_VER}-windows-x86_64.zip"
-          )
-
-          for ARCHIVE in "${FILES[@]}"; do
-            echo "Downloading ${ARCHIVE} from ${BASE_URL}/${ARCHIVE}..."
-            curl -fL -o "release-assets/${ARCHIVE}" "${BASE_URL}/${ARCHIVE}"
-          done
-
-          echo ""
-          echo "=== Downloaded Assets ==="
-          ls -lh release-assets/
-
       - name: Print Checksums for package_stc8051_index.json
         run: |
           echo "==========================================="
@@ -102,9 +69,9 @@ jobs:
 
             Arduino support for STC8 microcontrollers.
 
-            ### Bundled Tools
-            - **SDCC** ${{ inputs.sdcc_label_version }}
-            - **stcgal** ${{ inputs.stcgal_version }}
+            ### Supported Tools
+            - **SDCC** 4.5.0
+            - **stcgal** 1.10
 
             ### Installation
             Add this URL to Arduino IDE > File > Preferences > Additional Boards Manager URLs:

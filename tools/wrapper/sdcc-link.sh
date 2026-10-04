@@ -66,16 +66,16 @@ for iteration in $(seq 1 $MAX_ITERATIONS); do
         break
     fi
     
-    # Extract undefined symbol names from error output
-    UNDEFINED=$(grep -oP "(?<=Undefined Global ')[^']*" /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
+    # Extract undefined symbol names from error output (portable for Linux and macOS)
+    UNDEFINED=$(sed -n "s/.*Undefined Global '\([^']*\)'.*/\1/p" /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
     if [ -z "$UNDEFINED" ]; then
-        UNDEFINED=$(grep -oP "(?<=Undefined Global _)[^\s]+" /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
+        UNDEFINED=$(sed -n 's/.*Undefined Global _\([a-zA-Z0-9_]*\).*/\1/p' /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
     fi
     if [ -z "$UNDEFINED" ]; then
-        UNDEFINED=$(grep -oP "(?<=Undefined: ')[^']*" /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
+        UNDEFINED=$(sed -n "s/.*Undefined: '\([^']*\)'.*/\1/p" /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
     fi
     if [ -z "$UNDEFINED" ]; then
-        UNDEFINED=$(grep -oP "(?<=Undefined: _)[^\s]+" /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
+        UNDEFINED=$(sed -n 's/.*Undefined: _\([a-zA-Z0-9_]*\).*/\1/p' /tmp/sdcc_link_$$.txt 2>/dev/null | head -1)
     fi
     UNDEFINED="${UNDEFINED#_}"
     

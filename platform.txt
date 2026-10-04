@@ -7,7 +7,11 @@ compiler.path={runtime.tools.sdcc.path}/bin/
 compiler.wrapper.path={runtime.platform.path}/tools/wrapper
 
 # Warning flags
-compiler.warning_flags=--less-pedantic --disable-warning 110 --disable-warning 126 --disable-warning 283
+compiler.warning_flags={compiler.warning_flags.none}
+compiler.warning_flags.none=--less-pedantic
+compiler.warning_flags.default=--less-pedantic
+compiler.warning_flags.more=
+compiler.warning_flags.all=
 
 # Compiler commands
 compiler.c.cmd=sdcc
@@ -31,7 +35,7 @@ compiler.c.elf.wrapper.windows=sdcc-link.bat
 compiler.elf2hex.wrapper.windows=packihx.bat
 compiler.size.wrapper.windows=size.bat
 
-compiler.c.flags=-MMD -c -Ddouble=float -DUSE_STDINT -D__PROG_TYPES_COMPAT__ --opt-code-size {compiler.warning_flags}
+compiler.c.flags=-MMD -c -Ddouble=float -DUSE_STDINT -D__PROG_TYPES_COMPAT__ --opt-code-size --disable-warning 110 --disable-warning 126 --disable-warning 283 {compiler.warning_flags}
 compiler.cpp.flags={compiler.c.flags}
 compiler.ar.flags=rcs
 compiler.c.elf.flags=--nostdlib --code-size {upload.maximum_size} --xram-size {upload.maximum_data_size} --xram-loc {upload.xdata_location}
