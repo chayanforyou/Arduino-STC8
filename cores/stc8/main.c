@@ -7,6 +7,7 @@ extern void INT2_ISR(void) __interrupt(INT2_ISR_VECTOR);
 extern void INT3_ISR(void) __interrupt(INT3_ISR_VECTOR);
 extern void INT4_ISR(void) __interrupt(INT4_ISR_VECTOR);
 extern void timer0_isr(void) __interrupt(TIMER0_ISR_VECTOR);
+extern void pca_isr(void) __interrupt(PCA_ISR_VECTOR);
 extern void uart1_isr(void) __interrupt(UART1_ISR_VECTOR);
 
 

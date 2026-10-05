@@ -33,12 +33,16 @@ __sfr __at(0xA0) P2;        // Port 2 data register
 __sfr __at(0xA2) P_SW1;     // Peripheral port switch register 1
 __sfr __at(0xA8) IE;        // Interrupt Enable register
 __sfr __at(0xA9) SADDR;     // UART1 Slave address register
+__sfr __at(0xAF) IE2;       // Interrupt Enable register 2
 __sfr __at(0xB0) P3;        // Port 3 data register
 __sfr __at(0xB1) P3M1;      // Port 3 Mode register 1 (configuration)
 __sfr __at(0xB2) P3M0;      // Port 3 Mode register 0 (configuration)
 __sfr __at(0xB8) IP;        // Interrupt Priority register
 __sfr __at(0xB9) SADEN;     // UART1 Slave address mask register
 __sfr __at(0xBA) P_SW2;     // Peripheral port switch register 2 (EAXFR access)
+__sfr __at(0xBC) ADC_CONTR; // ADC Control register
+__sfr __at(0xBD) ADC_RES;   // ADC Result High Byte
+__sfr __at(0xBE) ADC_RESL;  // ADC Result Low Byte
 __sfr __at(0xC2) IAP_DATA;  // Flash / EEPROM data register
 __sfr __at(0xC3) IAP_ADDRH; // Flash / EEPROM address high byte
 __sfr __at(0xC4) IAP_ADDRL; // Flash / EEPROM address low byte
@@ -49,10 +53,27 @@ __sfr __at(0xC8) P5;        // Port 5 data register
 __sfr __at(0xC9) P5M1;      // Port 5 Mode register 1 (configuration)
 __sfr __at(0xCA) P5M0;      // Port 5 Mode register 0 (configuration)
 __sfr __at(0xD0) PSW;       // Program Status Word
+__sfr __at(0xD8) CCON;      // PCA Control Register
+__sfr __at(0xD9) CMOD;      // PCA Mode Register
+__sfr __at(0xDA) CCAPM0;    // PCA Module 0 Mode Register
+__sfr __at(0xDB) CCAPM1;    // PCA Module 1 Mode Register
+__sfr __at(0xDC) CCAPM2;    // PCA Module 2 Mode Register
+__sfr __at(0xDE) ADCCFG;    // ADC Configuration register
 __sfr __at(0xE0) ACC;       // Accumulator
+__sfr __at(0xE9) CL;        // PCA Counter Low Byte
+__sfr __at(0xEA) CCAP0L;    // PCA Module 0 Low Byte
+__sfr __at(0xEB) CCAP1L;    // PCA Module 1 Low Byte
+__sfr __at(0xEC) CCAP2L;    // PCA Module 2 Low Byte
 __sfr __at(0xEF) AUXINTIF;  // Auxiliary Interrupt Flags
 __sfr __at(0xF0) B;         // B register (multiplication/division)
+__sfr __at(0xF2) PCA_PWM0;  // PCA0 PWM Mode Register
+__sfr __at(0xF3) PCA_PWM1;  // PCA1 PWM Mode Register
+__sfr __at(0xF4) PCA_PWM2;  // PCA2 PWM Mode Register
 __sfr __at(0xF5) IAP_TPS;   // Flash / EEPROM timing parameter register
+__sfr __at(0xF9) CH;        // PCA Counter High Byte
+__sfr __at(0xFA) CCAP0H;    // PCA Module 0 High Byte
+__sfr __at(0xFB) CCAP1H;    // PCA Module 1 High Byte
+__sfr __at(0xFC) CCAP2H;    // PCA Module 2 High Byte
 
 // Extended SFRs (XDATA area, requires EAXFR bit in P_SW2 set to 1)
 __xdata __at(0xFE00) volatile uint8_t CKSEL;    // Clock source selection register
@@ -65,6 +86,7 @@ __xdata __at(0xFE13) volatile uint8_t P3PU;     // Port 3 internal pull-up resis
 __xdata __at(0xFE15) volatile uint8_t P5PU;     // Port 5 internal pull-up resistor enable
 __xdata __at(0xFE33) volatile uint8_t P3IE;     // Port 3 digital input enable register
 __xdata __at(0xFE35) volatile uint8_t P5IE;     // Port 5 digital input enable register
+__xdata __at(0xFEA8) volatile uint8_t ADCTIM;   // ADC Timing Control register (CSSETUP, CSHOLD, SMPDUTY)
 
 // P_SW2 (Peripheral Port Switch Register 2) bit definitions
 #define EAXFR 0x80 // Enable Extended SFR access in XDATA space (FE00H-FEFFH)
@@ -90,17 +112,31 @@ __xdata __at(0xFE35) volatile uint8_t P5IE;     // Port 5 digital input enable r
 #define P5_4 4 // Pin P5.4
 #define P5_5 5 // Pin P5.5
 
+// Built-in LED pin
+#define LED_BUILTIN P5_5
+
+// Analog pin aliases
+#define A0 P3_0 // ADC0
+#define A1 P3_1 // ADC1
+#define A2 P3_2 // ADC2
+#define A3 P3_3 // ADC3
+#define A4 P5_4 // ADC4
+#define A5 P5_5 // ADC5
+
 // Port identifiers
 #define PORT3 3 // Port 3 ID
 #define PORT5 5 // Port 5 ID
 
 // Interrupt Vector numbers for SDCC __interrupt(n)
-#define INT0_ISR_VECTOR   0  // External Interrupt 0 (P3.2)
-#define TIMER0_ISR_VECTOR 1  // Timer 0 Overflow Interrupt
-#define INT1_ISR_VECTOR   2  // External Interrupt 1 (P3.3)
-#define UART1_ISR_VECTOR  4  // UART1 Serial Interrupt (RI / TI)
-#define INT2_ISR_VECTOR   10 // External Interrupt 2 (P5.4 / P3.6 falling edge)
-#define INT3_ISR_VECTOR   11 // External Interrupt 3 (P5.5 / P3.7 falling edge)
-#define INT4_ISR_VECTOR   16 // External Interrupt 4 (P3.0 falling edge)
+#define INT0_ISR_VECTOR   0  // External Interrupt 0 (P3.2) - 0x0003
+#define TIMER0_ISR_VECTOR 1  // Timer 0 Overflow Interrupt - 0x000B
+#define INT1_ISR_VECTOR   2  // External Interrupt 1 (P3.3) - 0x0013
+#define TIMER1_ISR_VECTOR 3  // Timer 1 Overflow Interrupt - 0x001B
+#define UART1_ISR_VECTOR  4  // UART1 Serial Interrupt (RI / TI) - 0x0023
+#define ADC_ISR_VECTOR    5  // ADC Interrupt - 0x002B
+#define PCA_ISR_VECTOR    7  // PCA Interrupt (CCP/PWM/Hardware Timer) - 0x003B
+#define INT2_ISR_VECTOR   10 // External Interrupt 2 (P5.4 / P3.6 falling edge) - 0x0053
+#define INT3_ISR_VECTOR   11 // External Interrupt 3 (P5.5 / P3.7 falling edge) - 0x005B
+#define INT4_ISR_VECTOR   16 // External Interrupt 4 (P3.0 falling edge) - 0x0083
 
 #endif // _VARIANT_STC8G1K08A_H_

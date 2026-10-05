@@ -219,6 +219,12 @@ static void serial_print_number(int32_t num) __reentrant
   serial_print(ptr);
 }
 
+static void serial_println_number(int32_t num) __reentrant
+{
+  serial_print_number(num);
+  serial_println("");
+}
+
 // Read string until newline or timeout (simple version)
 static void serial_read_string(char *buffer, uint8_t max_len) __reentrant
 {
@@ -294,8 +300,8 @@ static char *serial_read_line(void) __reentrant
   return serial_line_buffer;
 }
 
-// Serial object instance
-Serial_t Serial = {
+// Serial object instance (stored in Flash ROM)
+const Serial_t Serial = {
     .begin = serial_begin,
     .beginWithPins = serial_begin_with_pins,
     .end = serial_end,
@@ -305,6 +311,7 @@ Serial_t Serial = {
     .print = serial_print,
     .println = serial_println,
     .printNumber = serial_print_number,
+    .printlnNumber = serial_println_number,
     .readString = serial_read_string,
-    .readLine = serial_read_line, // NEW
+    .readLine = serial_read_line,
 };

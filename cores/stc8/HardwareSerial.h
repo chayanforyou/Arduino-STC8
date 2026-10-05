@@ -24,11 +24,12 @@ typedef struct
     void (*print)(const char *str);
     void (*println)(const char *str);
     void (*printNumber)(int32_t num) __reentrant;
+    void (*printlnNumber)(int32_t num) __reentrant;
     void (*readString)(char *buffer, uint8_t max_len) __reentrant;  // Original
     char* (*readLine)(void) __reentrant;  // NEW - returns pointer to static buffer
 } Serial_t;
 
-// External Serial object
-extern Serial_t Serial;
+// External Serial object (stored in Flash ROM)
+extern const Serial_t Serial;
 
 #endif // HARDWARESERIAL_H

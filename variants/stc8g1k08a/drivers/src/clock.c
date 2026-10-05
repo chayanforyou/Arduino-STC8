@@ -1,43 +1,39 @@
 #include "Arduino.h"
 
+/**
+ * @brief Initialize the system clock for STC8G1K08A
+ * Configures the Internal High-speed RC Oscillator (IRC) and system clock divider.
+ */
 void clock_init(void)
 {
-  // CRITICAL: Enable extended RAM/SFR access
-  // Without this, all xdata register writes (HIRCCR, CKSEL, etc.) are ignored!
-  P_SW2 = 0x80;
+  // Enable Extended SFR (EAXFR) access for registers in 0xFE00-0xFEFF range
+  P_SW2 |= 0x80;
 
-  // Enable high-speed IRC
-  HIRCCR |= (HIGH << 7);
-  while (!(HIRCCR & 0x1))
-    ; // Wait for IRC ready
+  // Enable High-speed Internal IRC oscillator (Bit 7 = EN_IRC)
+  HIRCCR |= (1 << 7);
+  while (!(HIRCCR & 0x01))
+    ; // Wait until IRC is stable and ready (Bit 0 = HIRCRDY)
   
-  // Clock selection: internal high-precision IRC
-  CKSEL &= ~(0x7 << 0);
+  // Select Internal High-Speed IRC as Master Clock source (MCLKSEL = 000)
+  CKSEL &= ~(0x07 << 0);
 
-  // Calculate and set clock divider based on F_CPU
+  // Configure IRC Frequency Band and Clock Division based on F_CPU
 #if F_CPU <= 14700000
-  // Use 20MHz band with division for low frequencies
+  // Low-to-medium frequencies: Select 20MHz band with divider
   IRCBAND &= ~0x01; // Select 20MHz band
   CLKDIV = (20000000UL + F_CPU - 1) / F_CPU;
 
 #elif F_CPU <= 26000000
-  // Use 20MHz band, possibly with division or direct
+  // Standard 20MHz band without division (frequency tuned via ISP)
   IRCBAND &= ~0x01; // Select 20MHz band
-  // For frequencies in this range, IRC should be adjusted via ISP
-  // to the target frequency, so typically no division needed
-  CLKDIV = 0x01; // No division (MCLK/1)
-
-#elif F_CPU <= 35000000
-  // Use 33MHz band
-  IRCBAND |= 0x01; // Select 33MHz band
-  // IRC should be adjusted via ISP to target frequency
-  CLKDIV = 0x01; // No division (MCLK/1)
+  CLKDIV = 0x01;    // No division (MCLK / 1)
 
 #else
-  // For higher frequencies, use 33MHz band with appropriate settings
-  IRCBAND |= 0x01; // Select 33MHz band
-  CLKDIV = 0x01; // No division (MCLK/1)
+  // High frequencies (up to 35MHz): Select 33MHz band (frequency tuned via ISP)
+  IRCBAND |= 0x01;  // Select 33MHz band
+  CLKDIV = 0x01;    // No division (MCLK / 1)
 #endif
 
- P_SW2 = 0x00;  // <-- CRITICAL! You close the XDATA access
+  // Disable Extended SFR access to protect XDATA registers
+  P_SW2 &= ~0x80;
 }

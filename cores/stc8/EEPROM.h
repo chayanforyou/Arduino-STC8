@@ -17,6 +17,7 @@ typedef struct
     void    (*writeBlock)(uint16_t address, const void *src, uint16_t size) __reentrant;
 } EEPROM_t;
 
-extern EEPROM_t EEPROM;
+// EEPROM object instance (stored in Flash ROM)
+extern const EEPROM_t EEPROM;
 
 #endif // _EEPROM_H_

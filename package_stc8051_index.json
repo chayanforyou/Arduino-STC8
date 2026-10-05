@@ -12,6 +12,29 @@
         {
           "name": "Arduino-STC8",
           "architecture": "stc8",
+          "version": "1.2.0",
+          "category": "Contributed",
+          "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.2.0/Arduino-STC8-1.2.0.zip",
+          "archiveFileName": "Arduino-STC8-1.2.0.zip",
+          "checksum": "SHA-256:a6e603400cbe4278e7472a577d43881b2afadc8721980f565f831a799cbfad24",
+          "size": "45654",
+          "boards": [{ "name": "STC8G1K08A" }],
+          "toolsDependencies": [
+            {
+              "packager": "stc8051",
+              "name": "sdcc",
+              "version": "4.5.0"
+            },
+            {
+              "packager": "stc8051",
+              "name": "stcgal",
+              "version": "1.10"
+            }
+          ]
+        },
+        {
+          "name": "Arduino-STC8",
+          "architecture": "stc8",
           "version": "1.1.0",
           "category": "Contributed",
           "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.1.0/Arduino-STC8-1.1.0.zip",

@@ -121,7 +121,8 @@ static void eeprom_write_block(uint16_t address, const void *src, uint16_t size)
     }
 }
 
-EEPROM_t EEPROM = {
+// EEPROM object instance (stored in Flash ROM)
+const EEPROM_t EEPROM = {
     .read        = eeprom_read,
     .write       = eeprom_write,
     .update      = eeprom_update,

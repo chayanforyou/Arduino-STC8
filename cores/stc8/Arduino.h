@@ -7,9 +7,7 @@
 #include "HardwareSerial.h"
 #include "interrupt.h"
 #include "EEPROM.h"
-
-// Arduino Pin Definitions (map to STC8G pins)
-#define LED_BUILTIN P5_5
+#include "HardwareTimer.h"
 
 // Pin modes
 #define INPUT           0x00
@@ -23,6 +21,20 @@
 // Standard Arduino delay aliases
 #define delay(ms)              delay_ms(ms)
 #define delayMicroseconds(us)  delay_us(us)
+
+// ====================================================================================
+// MATH & HELPER MACROS
+// ====================================================================================
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+#define abs(x) ((x)>0?(x):-(x))
+#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+#define sq(x) ((x)*(x))
+#define radians(deg) ((deg)*3.1415926535897932384626433832795/180)
+#define degrees(rad) ((rad)*180/3.1415926535897932384626433832795)
+
+// Math functions
+long map(long x, long in_min, long in_max, long out_min, long out_max) __reentrant;
 
 // ====================================================================================
 // BIT MANIPULATION MACROS
@@ -77,23 +89,24 @@
 // Make word from two bytes
 #define MAKE_WORD(h, l) ((uint16_t)(((h) << 8) | (l)))
 
-// ====================================================================================
+// Interrupt control macros
+#define interrupts()   SET_BIT(IE, 7)
+#define noInterrupts() CLEAR_BIT(IE, 7)
+
+// System initialization
 void clock_init(void);
+void init(void);
 
-// GPIO functions
-// void pinMode(uint8_t pin, uint8_t mode);
-// void digitalWrite(uint8_t pin, uint8_t value);
-// uint8_t digitalRead(uint8_t pin);
-
-// Timer 0 mode definitions
-// void timer0_init();
-// void delay_us(uint32_t us);
-// void delay_ms(uint16_t ms);
-// void delay_s(uint8_t seconds);
+// System timing functions
 uint32_t micros(void);
 uint32_t millis(void);
+void delay_ms(uint32_t ms);
+void delay_us(uint32_t us);
+void delay_s(uint16_t seconds);
 
-void init(void);
+// Analog / PWM functions
+int analogRead(uint8_t pin) __reentrant;
+void analogWrite(uint8_t pin, uint8_t val);
 
 // Setup and loop (Arduino standard)
 extern void setup(void);
