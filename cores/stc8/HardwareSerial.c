@@ -3,6 +3,7 @@
 
 // Circular buffer for RX only
 #define SERIAL_RX_BUFFER_SIZE 64
+#define SERIAL_RX_BUFFER_MASK (SERIAL_RX_BUFFER_SIZE - 1)
 
 // Move buffer to XRAM to save internal RAM
 static volatile __xdata uint8_t rx_buffer[SERIAL_RX_BUFFER_SIZE];
@@ -14,12 +15,12 @@ static UartPinSelect_t current_pins = UART_PINS_DEFAULT;
 #define SERIAL_LINE_BUFFER_SIZE 64
 static __xdata char serial_line_buffer[SERIAL_LINE_BUFFER_SIZE];
 
-void uart1_isr(void) __interrupt(4)
+void uart1_isr(void) __interrupt(UART1_ISR_VECTOR)
 {
   // Handle receive interrupt
   if (READ_BIT(SCON, 0)) // RI flag
   {
-    uint8_t next_head = (rx_head + 1) % SERIAL_RX_BUFFER_SIZE;
+    uint8_t next_head = (rx_head + 1) & SERIAL_RX_BUFFER_MASK;
     uint8_t received_byte = SBUF;
 
     if (next_head != rx_tail)
@@ -132,7 +133,7 @@ static void serial_end(void)
 
 static uint8_t serial_available(void)
 {
-  return (SERIAL_RX_BUFFER_SIZE + rx_head - rx_tail) % SERIAL_RX_BUFFER_SIZE;
+  return (SERIAL_RX_BUFFER_SIZE + rx_head - rx_tail) & SERIAL_RX_BUFFER_MASK;
 }
 
 static int serial_read(void)
@@ -143,7 +144,7 @@ static int serial_read(void)
   }
 
   int data = rx_buffer[rx_tail];
-  rx_tail = (rx_tail + 1) % SERIAL_RX_BUFFER_SIZE;
+  rx_tail = (rx_tail + 1) & SERIAL_RX_BUFFER_MASK;
   return data;
 }
 

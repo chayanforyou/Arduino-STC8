@@ -3,9 +3,8 @@
 static volatile uint8_t timer_initialized = 0;
 static volatile __xdata uint32_t _millis = 0;
 
-// Store timer configuration for micros calculation
-static uint16_t timer_reload_value = 0;
-static uint16_t cycles_per_ms = 0;
+#define CYCLES_PER_MS      ((uint16_t)(F_CPU / 1000UL))
+#define TIMER_RELOAD_VALUE ((uint16_t)(65536UL - (F_CPU / 1000UL)))
 
 void timer0_init(void)
 {
@@ -22,12 +21,9 @@ void timer0_init(void)
   // Use 1T mode for precision
   AUXR |= (1 << 7);   // T0x12 = 1 (1T mode)
 
-  // Calculate reload value for 1ms at F_CPU in 1T mode
-  cycles_per_ms = F_CPU / 1000UL;
-  timer_reload_value = 65536UL - cycles_per_ms;
-  
-  TH0 = (uint8_t)(timer_reload_value >> 8);
-  TL0 = (uint8_t)(timer_reload_value & 0xFF);
+  // Set reload value for 1ms at F_CPU in 1T mode
+  TH0 = (uint8_t)(TIMER_RELOAD_VALUE >> 8);
+  TL0 = (uint8_t)(TIMER_RELOAD_VALUE & 0xFF);
 
   // Clear overflow flag
   TCON &= ~(1 << 5);  // TF0 = 0
@@ -47,6 +43,7 @@ void timer0_init(void)
 uint32_t millis(void)
 {
   uint32_t m;
+  uint8_t saved_ea;
   
   // Initialize on first call
   if (!timer_initialized)
@@ -55,9 +52,13 @@ uint32_t millis(void)
   }
   
   // Disable interrupts briefly to read atomically
-  IE &= ~(1 << 7);  // EA = 0
+  saved_ea = READ_BIT(IE, 7);
+  CLEAR_BIT(IE, 7);
   m = _millis;
-  IE |= (1 << 7);   // EA = 1
+  if (saved_ea)
+  {
+    SET_BIT(IE, 7);
+  }
   
   return m;
 }
@@ -67,6 +68,7 @@ uint32_t micros(void)
   uint32_t m;
   uint16_t timer_count;
   uint8_t tl, th;
+  uint8_t saved_ea;
   
   // Initialize on first call
   if (!timer_initialized)
@@ -75,29 +77,41 @@ uint32_t micros(void)
   }
   
   // Disable interrupts to read atomically
-  IE &= ~(1 << 7);  // EA = 0
+  saved_ea = READ_BIT(IE, 7);
+  CLEAR_BIT(IE, 7);
   
-  // Read current timer value
-  tl = TL0;
-  th = TH0;
+  // Double-read to prevent 16-bit timer rollover glitch
+  do {
+    th = TH0;
+    tl = TL0;
+  } while (th != TH0);
   timer_count = ((uint16_t)th << 8) | tl;
   
   // Get current millisecond count
   m = _millis;
   
-  // Re-enable interrupts
-  IE |= (1 << 7);   // EA = 1
+  // If timer overflow occurred while interrupts were disabled, adjust m
+  if (READ_BIT(TCON, 5) && (tl < 200))
+  {
+    m++;
+  }
+  
+  // Restore interrupt state
+  if (saved_ea)
+  {
+    SET_BIT(IE, 7);
+  }
   
   // Calculate elapsed cycles since last reload
   uint16_t elapsed_cycles;
-  if (timer_count >= timer_reload_value) {
-    elapsed_cycles = timer_count - timer_reload_value;
+  if (timer_count >= TIMER_RELOAD_VALUE) {
+    elapsed_cycles = timer_count - TIMER_RELOAD_VALUE;
   } else {
     // Handle overflow case
-    elapsed_cycles = (65536UL - timer_reload_value) + timer_count;
+    elapsed_cycles = (65536UL - TIMER_RELOAD_VALUE) + timer_count;
   }
   
-  uint32_t elapsed_us = ((uint32_t)elapsed_cycles * 1000UL) / cycles_per_ms;
+  uint32_t elapsed_us = ((uint32_t)elapsed_cycles * 1000UL) / CYCLES_PER_MS;
   
   return (m * 1000UL) + elapsed_us;
 }
@@ -129,7 +143,7 @@ void delay_s(uint16_t seconds)
 }
 
 // Timer 0 Overflow Interrupt Service Routine
-void timer0_isr(void) __interrupt(1)
+void timer0_isr(void) __interrupt(TIMER0_ISR_VECTOR)
 {
   _millis++;
 }

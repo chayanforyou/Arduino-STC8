@@ -38,22 +38,11 @@ static void pca_timer_set_period(uint32_t microseconds) __reentrant
         }
     }
     // Check if period fits in 12T mode (up to ~50ms)
-    else if (microseconds <= 50000UL)
+    else if (microseconds <= 50000UL && ((f_cpu_khz * microseconds) / 12000UL) <= 65535UL)
     {
-        uint32_t cycles_12t = (f_cpu_khz * microseconds) / 12000UL;
-        if (cycles_12t > 0 && cycles_12t <= 65535UL)
-        {
-            CMOD = 0x00; // 12T mode (SYSclk/12)
-            _pca_step = (uint16_t)cycles_12t;
-            _pca_prescaler_target = 1;
-        }
-        else
-        {
-            CMOD = 0x00; // 12T mode (SYSclk/12)
-            _pca_step = (uint16_t)(f_cpu_khz * 10UL / 12UL); // 10ms base tick
-            _pca_prescaler_target = (uint16_t)((microseconds + 5000UL) / 10000UL);
-            if (_pca_prescaler_target == 0) _pca_prescaler_target = 1;
-        }
+        CMOD = 0x00; // 12T mode (SYSclk/12)
+        _pca_step = (uint16_t)((f_cpu_khz * microseconds) / 12000UL);
+        _pca_prescaler_target = 1;
     }
     else
     {

@@ -6,6 +6,6 @@ INPUT="$2"
 OUTPUT="$3"
 
 # Run packihx and redirect output
-$PACKIHX "$INPUT" > "$OUTPUT" 2>/dev/null
+"$PACKIHX" "$INPUT" > "$OUTPUT" 2>/dev/null
 
 exit $?

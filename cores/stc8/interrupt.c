@@ -112,7 +112,7 @@ void detachInterrupt(uint8_t interrupt)
 }
 
 // Interrupt Service Routines
-void INT0_ISR(void) __interrupt(0)
+void INT0_ISR(void) __interrupt(INT0_ISR_VECTOR)
 {
     if (int0_user_handler) {
         int0_user_handler();
@@ -120,7 +120,7 @@ void INT0_ISR(void) __interrupt(0)
     CLEAR_BIT(TCON, 1); // Clear IE0 flag
 }
 
-void INT1_ISR(void) __interrupt(2)
+void INT1_ISR(void) __interrupt(INT1_ISR_VECTOR)
 {
     if (int1_user_handler) {
         int1_user_handler();
@@ -128,7 +128,7 @@ void INT1_ISR(void) __interrupt(2)
     CLEAR_BIT(TCON, 3); // Clear IE1 flag
 }
 
-void INT2_ISR(void) __interrupt(10)
+void INT2_ISR(void) __interrupt(INT2_ISR_VECTOR)
 {
     if (int2_user_handler) {
         int2_user_handler();
@@ -136,7 +136,7 @@ void INT2_ISR(void) __interrupt(10)
     AUXINTIF &= ~0x20; // Clear INT2IF flag
 }
 
-void INT3_ISR(void) __interrupt(11)
+void INT3_ISR(void) __interrupt(INT3_ISR_VECTOR)
 {
     if (int3_user_handler) {
         int3_user_handler();
@@ -144,7 +144,7 @@ void INT3_ISR(void) __interrupt(11)
     AUXINTIF &= ~0x40; // Clear INT3IF flag
 }
 
-void INT4_ISR(void) __interrupt(16)
+void INT4_ISR(void) __interrupt(INT4_ISR_VECTOR)
 {
     if (int4_user_handler) {
         int4_user_handler();
