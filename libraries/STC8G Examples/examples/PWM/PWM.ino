@@ -16,10 +16,10 @@
 
 #include <Arduino.h>
 
-const int ledPin = P3_3; // LED connected to PWM pin P3_3
+const int ledPin = P3_3;  // LED connected to PWM pin P3_3
 
 void setup() {
-  // analogWrite() does not strictly require pinMode(), 
+  // analogWrite() does not strictly require pinMode(),
   // but defining it as an OUTPUT is good practice.
   pinMode(ledPin, OUTPUT);
 }
@@ -28,7 +28,7 @@ void loop() {
   // Fade IN: Increase brightness from 0 to 255
   for (int brightness = 0; brightness <= 255; brightness++) {
     analogWrite(ledPin, brightness);
-    delay(10); // Wait 10ms to see the fading effect
+    delay(10);  // Wait 10ms to see the fading effect
   }
 
   // Fade OUT: Decrease brightness from 255 down to 0

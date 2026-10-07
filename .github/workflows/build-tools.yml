@@ -38,7 +38,7 @@ jobs:
           cp -r boards.txt platform.txt programmers.txt cores libraries tools variants README.md "${CORE_FOLDER}/"
 
           # Create core zip archive containing the root folder
-          zip -r "release-assets/${CORE_ARCHIVE}" "${CORE_FOLDER}"
+          zip -r "release-assets/${CORE_ARCHIVE}" "${CORE_FOLDER}" -x '*.DS_Store'
           rm -rf "${CORE_FOLDER}"
 
           echo "Created release-assets/${CORE_ARCHIVE}"
@@ -68,10 +68,6 @@ jobs:
             ## STC Arduino Core ${{ inputs.release_tag }}
 
             Arduino support for STC8 microcontrollers.
-
-            ### Supported Tools
-            - **SDCC** 4.5.0
-            - **stcgal** 1.10
 
             ### Installation
             Add this URL to Arduino IDE > File > Preferences > Additional Boards Manager URLs:
