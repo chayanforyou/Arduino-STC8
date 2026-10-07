@@ -18,7 +18,8 @@ Arduino support for STC8 microcontrollers with a familiar Arduino-like API.
 
 ### Requirements
 
-- Python 3.6 or later (for stcgal programmer)
+- Python 3.6 or later (used by the build wrappers; on Windows make sure `python` or `py` is on PATH)
+- Apple Silicon Macs: the bundled SDCC is an x86_64 build and needs Rosetta 2 (`softwareupdate --install-rosetta`)
 - Arduino IDE 1.8.x or Arduino IDE 2.x
 
 ### Supported Boards
@@ -42,11 +43,11 @@ The core implements standard Arduino functions and STC8 hardware-optimized perip
 | **ADC (Analog Read)** | `analogRead(pin)` | 10-bit resolution (0–1023) across 6 channels (`P3_0`..`P3_3`, `P5_4`, `P5_5`, and internal 1.19V reference) | `ADC` |
 | **Hardware PWM** | `analogWrite(pin, value)` | 8-bit PCA PWM (0–255) on `P3_2` (PWM0), `P3_3` (PWM1), `P5_4` (PWM2) | `PWM` |
 | **Timing** | `millis()`, `micros()`, `delay()`, `delay_ms()`, `delay_us()` | Non-blocking & blocking delays via Timer 0 | `Millis_Micros` |
-| **Hardware Timer** | `Timer.setPeriod()`, `Timer.attachInterrupt()`, `Timer.start()`, `Timer.stop()` | 16-bit hardware PCA timer for periodic background tasks | `Timer` |
+| **Hardware Timer** | `Timer.setPeriod()`, `Timer.attachInterrupt()`, `Timer.start()`, `Timer.stop()` | Periodic interrupt from the PCA counter overflow; works alongside PWM on all 3 pins. See [PCA sharing](#pca-sharing-pwm-and-timer) | `Timer`, `PWM_Timer` |
 | **Serial (UART)** | `Serial.begin()`, `Serial.beginWithPins()`, `print()`, `read()`, `write()` | Hardware UART with pin selection (`UART_PINS_DEFAULT`, `UART_PINS_P32_P33`, `UART_PINS_P54_P55`) | `Serial` |
 | **Interrupts** | `attachInterrupt()`, `detachInterrupt()`, `interrupts()`, `noInterrupts()` | Ext. INT0 (`P3_2`), INT1 (`P3_3`), INT2 (`P5_4`), INT3 (`P5_5`), INT4 (`P3_0`) | `Interrupt` |
 | **Math & Utils** | `map()`, `constrain()`, `min()`, `max()`, `abs()`, `sq()` | Standard Arduino mathematical functions | `ADC`, `PWM` |
-| **EEPROM** | `EEPROM.read()`, `EEPROM.write()`, `EEPROM.update()`, `EEPROM.length()` | Internal IAP Flash EEPROM storage | `EEPROM` |
+| **EEPROM** | `EEPROM.read()`, `EEPROM.write()`, `EEPROM.update()`, `EEPROM.eraseSector()`, `EEPROM.readBlock()`, `EEPROM.writeBlock()`, `EEPROM.length()` | 4 KB IAP data flash (8 × 512-byte sectors). See [EEPROM notes](#eeprom-notes) | `EEPROM`, `EEPROM_SaveState` |
 
 ## Pin Mapping
 
@@ -64,12 +65,14 @@ The core implements standard Arduino functions and STC8 hardware-optimized perip
 The core includes several examples demonstrating basic functionality:
 
 - **ADC** - 10-bit analog input reading with `analogRead()`
+- **ADC_PWM** - Read a potentiometer with `analogRead()`, set LED brightness with `analogWrite()`, and print both values
 - **Blink** - Basic LED blinking
 - **Button** - Reading digital input
 - **EEPROM** - Read/write to internal EEPROM
 - **Interrupt** - Using external interrupts
 - **Millis_Micros** - Non-blocking timing with millis()/micros()
 - **PWM** - Smooth hardware PWM LED fading with `analogWrite()`
+- **PWM_Timer** - PWM on all three PWM pins while the hardware `Timer` interrupt runs
 - **Serial** - Serial communication and echo
 - **Timer** - Periodic hardware timer interrupt with `Timer`
 
@@ -110,7 +113,8 @@ Select frequency via **Tools → Clock Speed** menu.
 
 ### Memory Limitations
 - **Flash:** 8 KB total
-- **RAM:** 1 KB (256 bytes internal + 768 bytes XRAM)
+- **RAM:** 256 bytes internal RAM (shared with the stack) + 1 KB XRAM
+- The IDE's "Global variables" figure only counts XRAM; watch internal RAM usage too
 - Use `__xdata` keyword for large buffers to save internal RAM
 
 ### SDCC Specific
@@ -118,6 +122,23 @@ Select frequency via **Tools → Clock Speed** menu.
 - Some C++ features may be limited
 - Use `__reentrant` on Serial functions with parameters to ensure interrupt-safe execution under SDCC.
 - Global variables default to internal RAM (limited to 256 bytes)
+
+### EEPROM Notes
+The EEPROM is data flash, so it follows flash rules:
+- `eraseSector(addr)` erases the whole 512-byte sector containing `addr` to `0xFF`.
+- A write can only change bits from 1 to 0. To change a byte otherwise, erase its sector, then write back **every** value you still need in it.
+- `write()`, `update()`, `eraseSector()` and `writeBlock()` return `false` if the data could not be stored.
+- Each sector survives about 100,000 erases, so don't erase in a loop.
+
+### PCA Sharing (PWM and Timer)
+`analogWrite()` and `Timer` share one PCA counter, which runs at `F_CPU` and is never stopped once started. `Timer` uses no PCA module (it counts counter overflows), so:
+- PWM works on all 3 pins (`P3_2`, `P3_3`, `P5_4`) while `Timer` is running.
+- PWM frequency is always `F_CPU / 256` (~43.2 kHz at 11.0592 MHz). `Timer.setPeriod()`, `Timer.start()` and `Timer.stop()` don't affect PWM.
+- `Timer` periods range from 1024 CPU cycles (~93 µs at 11.0592 MHz) to 100 s. Each tick may be up to 256 CPU cycles (~23 µs at 11.0592 MHz) early or late, but the average period is exact.
+- If `Timer.start()` is called before `Timer.setPeriod()`, the period defaults to 10 ms.
+
+### Interrupt Callbacks
+Callbacks passed to `attachInterrupt()` and `Timer.attachInterrupt()` run inside an ISR: keep them short, make shared variables `volatile`, and put `#pragma nooverlay` before a callback that has local variables.
 
 <!-- ## Troubleshooting
 

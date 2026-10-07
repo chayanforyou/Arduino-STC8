@@ -94,11 +94,14 @@ if driver_files:
             drv = driver_symbols.get(sym)
             if drv and drv not in resolved:
                 resolved.add(drv)
-                needed_drivers.append(drv)
                 _, drv_refs = driver_cache[drv]
                 new_refs |= drv_refs
         to_resolve = new_refs - undefined
         undefined |= new_refs
+
+    # Link in the order Arduino passed the drivers, not set iteration order
+    # (which changes between runs), so identical sources give identical output
+    needed_drivers = [drv for drv in driver_files if drv in resolved]
 
 # 4. Execute link (Objects first, then libraries for proper symbol resolution)
 cmd = [sdcc] + opt_flags + rel_files + needed_drivers + lib_flags
