@@ -1,11 +1,11 @@
-import sys
 import os
+import sys
 
 if len(sys.argv) > 1:
-    path = sys.argv[1].replace('/', '\\')
-    if os.path.exists(path):
+    path = os.path.normpath(sys.argv[1])
+    if os.path.isfile(path):
         try:
             with open(path, 'r', errors='ignore') as f:
                 sys.stdout.write(f.read())
-        except Exception:
+        except OSError:
             pass

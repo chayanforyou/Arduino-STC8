@@ -11,8 +11,8 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#define LED_PIN     P3_3
-#define BUTTON_PIN  P5_5
+#define LED_PIN P3_3
+#define BUTTON_PIN P5_5
 #define EEPROM_ADDR 0
 
 uint8_t ledState;

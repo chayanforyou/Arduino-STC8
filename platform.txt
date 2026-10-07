@@ -1,6 +1,6 @@
 # STC8G Platform Configuration
 name=STC8G Boards
-version=1.1.0
+version=1.0.0
 
 # Compiler paths
 compiler.path={runtime.tools.sdcc.path}/bin/
@@ -83,7 +83,3 @@ tools.stcgal.path={runtime.tools.stcgal.path}
 tools.stcgal.upload.params.verbose=-v
 tools.stcgal.upload.params.quiet=
 tools.stcgal.upload.pattern="{path}/{cmd}" -p {serial.port} -t {build.f_cpu_khz} "{build.path}/{build.project_name}.ihx"
-
-
-# USB Default Flags
-build.usb_flags=-DUSB_VID={build.vid} -DUSB_PID={build.pid} '-DUSB_MANUFACTURER={build.usb_manufacturer}' '-DUSB_PRODUCT={build.usb_product}'

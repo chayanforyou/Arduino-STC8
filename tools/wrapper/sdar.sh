@@ -1,33 +1,9 @@
 #!/bin/bash
-# SDAR Wrapper Script for Arduino
-# Handles conversion between Arduino's .a archives and SDCC's .lib archives
-
-SDAR="$1"
-ARCHIVE="$2"
-OBJECT="$3"
-MODE="$4"
-shift 4
-FLAGS="$@"
-
-# Convert .a to .lib for SDCC
-ARCHIVE_LIB="${ARCHIVE%.a}.lib"
-OBJECT_REL="${OBJECT%.o}.rel"
-
-# Convert .o to .rel temporarily
-if [ -f "$OBJECT" ]; then
-    cp "$OBJECT" "$OBJECT_REL"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if command -v python3 >/dev/null 2>&1; then
+    exec python3 "$DIR/sdar_wrapper.py" "$@"
+elif command -v python >/dev/null 2>&1; then
+    exec python "$DIR/sdar_wrapper.py" "$@"
 fi
-
-# Run sdar with .lib extension
-$SDAR $FLAGS "$ARCHIVE_LIB" "$OBJECT_REL"
-
-# Convert .lib back to .a for Arduino
-if [ -f "$ARCHIVE_LIB" ]; then
-    cp "$ARCHIVE_LIB" "$ARCHIVE"
-fi
-
-# Cleanup temporary .rel file
-rm -f "$OBJECT_REL"
-
-# Propagate sdar exit code
-exit $?
+echo "sdar: Python 3 is required but was not found in PATH" >&2
+exit 1

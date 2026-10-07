@@ -12,10 +12,10 @@
         {
           "name": "Arduino-STC8",
           "architecture": "stc8",
-          "version": "1.2.0",
+          "version": "1.0.0",
           "category": "Contributed",
-          "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.2.0/Arduino-STC8-1.2.0.zip",
-          "archiveFileName": "Arduino-STC8-1.2.0.zip",
+          "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.0/Arduino-STC8-1.0.0.zip",
+          "archiveFileName": "Arduino-STC8-1.0.0.zip",
           "checksum": "SHA-256:a6e603400cbe4278e7472a577d43881b2afadc8721980f565f831a799cbfad24",
           "size": "45654",
           "boards": [{ "name": "STC8G1K08A" }],
@@ -23,58 +23,12 @@
             {
               "packager": "stc8051",
               "name": "sdcc",
-              "version": "4.5.0"
+              "version": "1.0.0"
             },
             {
               "packager": "stc8051",
               "name": "stcgal",
-              "version": "1.10"
-            }
-          ]
-        },
-        {
-          "name": "Arduino-STC8",
-          "architecture": "stc8",
-          "version": "1.1.0",
-          "category": "Contributed",
-          "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.1.0/Arduino-STC8-1.1.0.zip",
-          "archiveFileName": "Arduino-STC8-1.1.0.zip",
-          "checksum": "SHA-256:a9e107ad3b320fb70670e2d24405612ce37c3db6c6fcb79ce029886d271635b1",
-          "size": "38475",
-          "boards": [{ "name": "STC8G1K08A" }],
-          "toolsDependencies": [
-            {
-              "packager": "stc8051",
-              "name": "sdcc",
-              "version": "4.5.0"
-            },
-            {
-              "packager": "stc8051",
-              "name": "stcgal",
-              "version": "1.10"
-            }
-          ]
-        },
-        {
-          "name": "Arduino-STC8",
-          "architecture": "stc8",
-          "version": "1.0.0",
-          "category": "Contributed",
-          "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.0/Arduino-STC8-1.0.0.zip",
-          "archiveFileName": "Arduino-STC8-1.0.0.zip",
-          "checksum": "SHA-256:de85c2eca4a69606fef159d453f4d8611d0cda3806b2421a1dc23a30005ff353",
-          "size": "34175",
-          "boards": [{ "name": "STC8G1K08A" }],
-          "toolsDependencies": [
-            {
-              "packager": "stc8051",
-              "name": "sdcc",
-              "version": "4.5.0"
-            },
-            {
-              "packager": "stc8051",
-              "name": "stcgal",
-              "version": "1.10"
+              "version": "1.0"
             }
           ]
         }
@@ -82,67 +36,109 @@
       "tools": [
         {
           "name": "sdcc",
-          "version": "4.5.0",
+          "version": "1.0.0",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-4.5.0-linux-x86_64.tar.gz",
-              "archiveFileName": "sdcc-4.5.0-linux-x86_64.tar.gz",
-              "checksum": "SHA-256:e2e27bd75bcf3932e5d9a483bf2ed048f6251ffbec1eabf957c4190181a9a73b",
-              "size": "34687349"
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-x86_64-pc-linux-gnu.tar.gz",
+              "archiveFileName": "sdcc-x86_64-pc-linux-gnu.tar.gz",
+              "checksum": "SHA-256:ed624df8d74617f7d21cae17ff6b8857691064730f0168d845c08b59e6ea62b5",
+              "size": "32520566"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-i686-pc-linux-gnu.tar.gz",
+              "archiveFileName": "sdcc-i686-pc-linux-gnu.tar.gz",
+              "checksum": "SHA-256:598af3773df725deae11c11d2b6c2fff4b8ae342debeffee2c998f573ccf8c1f",
+              "size": "32900710"
+            },
+            {
+              "host": "aarch64-linux-gnu",
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-aarch64-linux-gnu.tar.gz",
+              "archiveFileName": "sdcc-aarch64-linux-gnu.tar.gz",
+              "checksum": "SHA-256:1f3c012003f811c98e55bda35be4368dece78afb4d6f2babe311e81271cb2a8f",
+              "size": "30129955"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-4.5.0-windows-x86_64.zip",
-              "archiveFileName": "sdcc-4.5.0-windows-x86_64.zip",
-              "checksum": "SHA-256:c7f2c369d3cb26f9275592ac37445072b62255a982b6ad8fef3ceb7d88d2e344",
-              "size": "40793885"
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-x86_64-mingw32.zip",
+              "archiveFileName": "sdcc-x86_64-mingw32.zip",
+              "checksum": "SHA-256:65303021da39bbdd9cfcdae6b4f57dc30015396d6d28722431d3b58444b48afa",
+              "size": "39055913"
+            },
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-i686-mingw32.zip",
+              "archiveFileName": "sdcc-i686-mingw32.zip",
+              "checksum": "SHA-256:0483d1ec3bda0d87ecb47d71e163d9aebb9f15210de2a8f6b58a3b7ac245b387",
+              "size": "41475621"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-4.5.0-macos-x86_64.tar.gz",
-              "archiveFileName": "sdcc-4.5.0-macos-x86_64.tar.gz",
-              "checksum": "SHA-256:31d64f8cb4b75f25bc8d73f5e231590d94ed50f8f005b260af4557e9f20841d6",
-              "size": "34735732"
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-x86_64-apple-darwin.tar.gz",
+              "archiveFileName": "sdcc-x86_64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:93a9e1b8e14568503a81fda9e81d03463f882246f765f69167ab37a14c79106b",
+              "size": "32296031"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-4.5.0-macos-x86_64.tar.gz",
-              "archiveFileName": "sdcc-4.5.0-macos-x86_64.tar.gz",
-              "checksum": "SHA-256:31d64f8cb4b75f25bc8d73f5e231590d94ed50f8f005b260af4557e9f20841d6",
-              "size": "34735732"
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-x86_64-apple-darwin.tar.gz",
+              "archiveFileName": "sdcc-x86_64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:93a9e1b8e14568503a81fda9e81d03463f882246f765f69167ab37a14c79106b",
+              "size": "32296031"
             }
           ]
         },
         {
           "name": "stcgal",
-          "version": "1.10",
+          "version": "1.0",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-1.10-linux-x86_64.tar.gz",
-              "archiveFileName": "stcgal-1.10-linux-x86_64.tar.gz",
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-x86_64-pc-linux-gnu.tar.gz",
+              "archiveFileName": "stcgal-x86_64-pc-linux-gnu.tar.gz",
               "checksum": "SHA-256:6da5ecc55c5fec60bb8aad812a9889f4a0325dc72817fba3bda26dca3f7e5e9d",
               "size": "18465479"
             },
             {
+              "host": "i686-pc-linux-gnu",
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-python.tar.gz",
+              "archiveFileName": "stcgal-python.tar.gz",
+              "checksum": "SHA-256:fe8248b3d9ef5195ffd67b00747c11cbe80e3e42b1f074ba1cff717ecb0a9938",
+              "size": "308959"
+            },
+            {
+              "host": "aarch64-linux-gnu",
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-python.tar.gz",
+              "archiveFileName": "stcgal-python.tar.gz",
+              "checksum": "SHA-256:fe8248b3d9ef5195ffd67b00747c11cbe80e3e42b1f074ba1cff717ecb0a9938",
+              "size": "308959"
+            },
+            {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-1.10-windows-x86_64.zip",
-              "archiveFileName": "stcgal-1.10-windows-x86_64.zip",
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-x86_64-mingw32.zip",
+              "archiveFileName": "stcgal-x86_64-mingw32.zip",
               "checksum": "SHA-256:0af12029d043ce6a9d3b7e195c06bd37ae12d628010ac28d10fb74cb13862465",
               "size": "9295385"
             },
             {
+              "host": "i686-mingw32",
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-python.zip",
+              "archiveFileName": "stcgal-python.zip",
+              "checksum": "SHA-256:52142fb7071b05341dc64e730457961b92d2f6ee77363bfe121ddfdb92b44eea",
+              "size": "348179"
+            },
+            {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-1.10-macos-universal.tar.gz",
-              "archiveFileName": "stcgal-1.10-macos-universal.tar.gz",
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-x86_64-apple-darwin.tar.gz",
+              "archiveFileName": "stcgal-x86_64-apple-darwin.tar.gz",
               "checksum": "SHA-256:2e7f3cd23ff65edd3df01982084ec8da514922de6a5e3e2063c90013cb95bd39",
               "size": "490094"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-1.10-macos-universal.tar.gz",
-              "archiveFileName": "stcgal-1.10-macos-universal.tar.gz",
+              "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/stcgal-x86_64-apple-darwin.tar.gz",
+              "archiveFileName": "stcgal-x86_64-apple-darwin.tar.gz",
               "checksum": "SHA-256:2e7f3cd23ff65edd3df01982084ec8da514922de6a5e3e2063c90013cb95bd39",
               "size": "490094"
             }
