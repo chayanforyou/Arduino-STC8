@@ -16,8 +16,8 @@
           "category": "Contributed",
           "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/v1.0.0/Arduino-STC8-1.0.0.zip",
           "archiveFileName": "Arduino-STC8-1.0.0.zip",
-          "checksum": "SHA-256:a6e603400cbe4278e7472a577d43881b2afadc8721980f565f831a799cbfad24",
-          "size": "45654",
+          "checksum": "SHA-256:86d86c212713c80121737fdb2af327fedb5d942bf39f1c829c60d6f5e85f5121",
+          "size": "51005",
           "boards": [{ "name": "STC8G1K08A" }],
           "toolsDependencies": [
             {
@@ -63,8 +63,8 @@
               "host": "x86_64-mingw32",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-x86_64-mingw32.zip",
               "archiveFileName": "sdcc-x86_64-mingw32.zip",
-              "checksum": "SHA-256:65303021da39bbdd9cfcdae6b4f57dc30015396d6d28722431d3b58444b48afa",
-              "size": "39055913"
+              "checksum": "SHA-256:b61ca342fa5558c0843816e78204b9bc1444c24fd0c0fe0921f2a6a791f1b7b5",
+              "size": "42864995"
             },
             {
               "host": "i686-mingw32",
@@ -77,15 +77,15 @@
               "host": "x86_64-apple-darwin",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-x86_64-apple-darwin.tar.gz",
               "archiveFileName": "sdcc-x86_64-apple-darwin.tar.gz",
-              "checksum": "SHA-256:93a9e1b8e14568503a81fda9e81d03463f882246f765f69167ab37a14c79106b",
-              "size": "32296031"
+              "checksum": "SHA-256:31d64f8cb4b75f25bc8d73f5e231590d94ed50f8f005b260af4557e9f20841d6",
+              "size": "34735732"
             },
             {
               "host": "arm64-apple-darwin",
               "url": "https://github.com/chayanforyou/Arduino-STC8/releases/download/tools/sdcc-x86_64-apple-darwin.tar.gz",
               "archiveFileName": "sdcc-x86_64-apple-darwin.tar.gz",
-              "checksum": "SHA-256:93a9e1b8e14568503a81fda9e81d03463f882246f765f69167ab37a14c79106b",
-              "size": "32296031"
+              "checksum": "SHA-256:31d64f8cb4b75f25bc8d73f5e231590d94ed50f8f005b260af4557e9f20841d6",
+              "size": "34735732"
             }
           ]
         },

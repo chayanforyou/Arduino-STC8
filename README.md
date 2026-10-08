@@ -18,7 +18,10 @@ Arduino support for STC8 microcontrollers with a familiar Arduino-like API.
 
 ### Requirements
 
-- Python 3.6 or later (used by the build wrappers; on Windows make sure `python` or `py` is on PATH)
+- Python 3.8 or later, 3.12 recommended:
+  - Windows: [python-3.12.0-amd64.exe](https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe) (tick **Add python.exe to PATH** in the installer)
+  - macOS: [python-3.12.0-macos11.pkg](https://www.python.org/ftp/python/3.12.0/python-3.12.0-macos11.pkg)
+  - Linux: `sudo apt install python3`
 - Apple Silicon Macs: the bundled SDCC is an x86_64 build and needs Rosetta 2 (`softwareupdate --install-rosetta`)
 - Arduino IDE 1.8.x or Arduino IDE 2.x
 

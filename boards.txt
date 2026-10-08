@@ -9,6 +9,7 @@ stc8g1k08a.build.mcu=stc8g1k08a
 stc8g1k08a.build.board=STC8G1K08A
 stc8g1k08a.build.core=stc8
 stc8g1k08a.build.variant=stc8g1k08a
+stc8g1k08a.upload.tool=stcgal
 stc8g1k08a.upload.tool.default=stcgal
 stc8g1k08a.upload.protocol=stc
 stc8g1k08a.upload.maximum_size=8192
